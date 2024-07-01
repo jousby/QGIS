@@ -44,6 +44,7 @@
 %Include auto_generated/qgsdatabasetablecombobox.sip
 %Include auto_generated/qgsdataitemguiprovider.sip
 %Include auto_generated/qgsdataitemguiproviderregistry.sip
+%Include auto_generated/qgsdataitemguiproviderutils.sip
 %Include auto_generated/qgsdatasourceselectdialog.sip
 %Include auto_generated/qgsdbrelationshipwidget.sip
 %Include auto_generated/qgsdecoratedscrollbar.sip
@@ -449,6 +450,7 @@
 %Include auto_generated/proj/qgsprojectionselectionwidget.sip
 %Include auto_generated/proj/qgsrecentcoordinatereferencesystemsmodel.sip
 %Include auto_generated/providers/qgsabstractdbsourceselect.sip
+%Include auto_generated/providers/gdal/qgsgdalcredentialoptionswidget.sip
 %Include auto_generated/raster/qgsrasterattributetablewidget.sip
 %Include auto_generated/raster/qgsrasterattributetabledialog.sip
 %Include auto_generated/raster/qgscolorrampshaderwidget.sip

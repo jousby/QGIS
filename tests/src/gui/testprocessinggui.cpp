@@ -103,6 +103,8 @@
 #include "qgsannotationlayer.h"
 #include "qgsprocessingparameteralignrasterlayers.h"
 #include "qgsprocessingalignrasterlayerswidgetwrapper.h"
+#include "qgsprocessingrasteroptionswidgetwrapper.h"
+#include "qgsrasterformatsaveoptionswidget.h"
 
 
 class TestParamType : public QgsProcessingParameterDefinition
@@ -319,6 +321,7 @@ class TestProcessingGui : public QObject
     void testTinInputLayerWrapper();
     void testDxfLayersWrapper();
     void testAlignRasterLayersWrapper();
+    void testRasterOptionsWrapper();
     void testMeshDatasetWrapperLayerInProject();
     void testMeshDatasetWrapperLayerOutsideProject();
     void testModelGraphicsView();
@@ -522,6 +525,21 @@ void TestProcessingGui::testWrapperFactoryRegistry()
   wrapper = registry.createParameterWidgetWrapper( &numParam, QgsProcessingGui::Standard );
   QVERIFY( wrapper );
   QCOMPARE( wrapper->parameterDefinition()->type(), QStringLiteral( "num" ) );
+  delete wrapper;
+
+  // creating wrapper using metadata
+  TestParamType customParam( QStringLiteral( "custom" ), QStringLiteral( "custom" ) );
+  wrapper = registry.createParameterWidgetWrapper( &customParam, QgsProcessingGui::Standard );
+  QVERIFY( !wrapper );
+  customParam.setMetadata( {{
+      QStringLiteral( "widget_wrapper" ), QVariantMap(
+      {{QStringLiteral( "widget_type" ), QStringLiteral( "str" ) }}
+      )
+    }
+  } );
+  wrapper = registry.createParameterWidgetWrapper( &customParam, QgsProcessingGui::Standard );
+  QVERIFY( wrapper );
+  QCOMPARE( wrapper->parameterDefinition()->type(), QStringLiteral( "custom" ) );
   delete wrapper;
 
   // removing
@@ -10037,6 +10055,32 @@ void TestProcessingGui::testAlignRasterLayersWrapper()
   QVERIFY( definition.checkValueIsAcceptable( value, &context ) );
   QString valueAsPythonString = definition.valueAsPythonString( value, context );
   QCOMPARE( valueAsPythonString, QStringLiteral( "[{'inputFile': '%1','outputFile': '%2','resampleMethod': 1,'rescale': False}]" ).arg( rasterLayer->source() ).arg( layerMap["outputFile"].toString() ) );
+}
+
+void TestProcessingGui::testRasterOptionsWrapper()
+{
+  QgsProcessingParameterString param( QStringLiteral( "string" ), QStringLiteral( "string" ) );
+  param.setMetadata( {{
+      QStringLiteral( "widget_wrapper" ), QVariantMap(
+      {{QStringLiteral( "widget_type" ), QStringLiteral( "rasteroptions" ) }}
+      )
+    }
+  } );
+
+  QgsProcessingContext context;
+  QgsProcessingRasterOptionsWidgetWrapper wrapper( &param );
+
+  std::unique_ptr<QWidget> w( wrapper.createWidget() );
+  QVERIFY( w );
+
+  QSignalSpy spy( &wrapper, &QgsProcessingRasterOptionsWidgetWrapper::widgetValueHasChanged );
+  wrapper.setWidgetValue( QStringLiteral( "TFW=YES" ), context );
+  QCOMPARE( spy.count(), 1 );
+  QCOMPARE( wrapper.widgetValue().toString(), QStringLiteral( "TFW=YES" ) );
+  wrapper.setWidgetValue( QStringLiteral( "TFW=YES TILED=YES" ), context );
+  QCOMPARE( wrapper.widgetValue().toString(), QStringLiteral( "TFW=YES|TILED=YES" ) );
+  wrapper.setWidgetValue( QStringLiteral( "TFW=YES|TILED=NO" ), context );
+  QCOMPARE( wrapper.widgetValue().toString(), QStringLiteral( "TFW=YES|TILED=NO" ) );
 }
 
 void TestProcessingGui::testMeshDatasetWrapperLayerInProject()

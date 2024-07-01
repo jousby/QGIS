@@ -142,8 +142,6 @@ void QgsSettingsRegistryCore::migrateOldSettings()
 
   QgsProcessing::settingsPreferFilenameAsLayerName->copyValueFromKey( QStringLiteral( "Processing/Configuration/PREFER_FILENAME_AS_LAYER_NAME" ) );
   QgsProcessing::settingsTempPath->copyValueFromKey( QStringLiteral( "Processing/Configuration/TEMP_PATH2" ) );
-  QgsProcessing::settingsDefaultOutputVectorLayerExt->copyValueFromKey( QStringLiteral( "Processing/Configuration/DefaultOutputVectorLayerExt" ) );
-  QgsProcessing::settingsDefaultOutputRasterLayerExt->copyValueFromKey( QStringLiteral( "Processing/Configuration/DefaultOutputRasterLayerExt" ) );
 
   QgsNetworkAccessManager::settingsNetworkTimeout->copyValueFromKey( QStringLiteral( "qgis/networkAndProxy/networkTimeout" ) );
 
@@ -273,6 +271,7 @@ void QgsSettingsRegistryCore::migrateOldSettings()
       Q_NOWARN_DEPRECATED_PUSH
       settings.beginGroup( connection );
       QgsOwsConnection::settingsHeaders->setValue( QgsHttpHeaders( settings ).headers(), {service.toLower(), connection} );
+      settings.remove( QStringLiteral( "http-header" ) );
       settings.endGroup();
       Q_NOWARN_DEPRECATED_POP
 
@@ -302,6 +301,7 @@ void QgsSettingsRegistryCore::migrateOldSettings()
       Q_NOWARN_DEPRECATED_PUSH
       settings.beginGroup( connection );
       QgsVectorTileProviderConnection::settingsHeaders->setValue( QgsHttpHeaders( settings ).headers(), connection );
+      settings.remove( QStringLiteral( "http-header" ) );
       settings.endGroup();
       Q_NOWARN_DEPRECATED_POP
     }
@@ -326,6 +326,7 @@ void QgsSettingsRegistryCore::migrateOldSettings()
       Q_NOWARN_DEPRECATED_PUSH
       settings.beginGroup( connection );
       QgsXyzConnectionSettings::settingsHeaders->setValue( QgsHttpHeaders( settings ).headers(), connection );
+      settings.remove( QStringLiteral( "http-header" ) );
       settings.endGroup();
       Q_NOWARN_DEPRECATED_POP
     }
@@ -351,6 +352,7 @@ void QgsSettingsRegistryCore::migrateOldSettings()
         Q_NOWARN_DEPRECATED_PUSH
         settings.beginGroup( connection );
         QgsArcGisConnectionSettings::settingsHeaders->setValue( QgsHttpHeaders( settings ).headers(), connection );
+        settings.remove( QStringLiteral( "http-header" ) );
         settings.endGroup();
         Q_NOWARN_DEPRECATED_POP
       }
@@ -397,8 +399,6 @@ void QgsSettingsRegistryCore::backwardCompatibility()
 
   QgsProcessing::settingsPreferFilenameAsLayerName->copyValueToKeyIfChanged( QStringLiteral( "Processing/Configuration/PREFER_FILENAME_AS_LAYER_NAME" ) );
   QgsProcessing::settingsTempPath->copyValueToKeyIfChanged( QStringLiteral( "Processing/Configuration/TEMP_PATH2" ) );
-  QgsProcessing::settingsDefaultOutputVectorLayerExt->copyValueToKeyIfChanged( QStringLiteral( "Processing/Configuration/DefaultOutputVectorLayerExt" ) );
-  QgsProcessing::settingsDefaultOutputRasterLayerExt->copyValueToKeyIfChanged( QStringLiteral( "Processing/Configuration/DefaultOutputRasterLayerExt" ) );
 
   QgsNetworkAccessManager::settingsNetworkTimeout->copyValueToKeyIfChanged( QStringLiteral( "qgis/networkAndProxy/networkTimeout" ) );
 

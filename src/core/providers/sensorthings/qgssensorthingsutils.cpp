@@ -32,13 +32,50 @@
 //
 // QgsSensorThingsExpansionDefinition
 //
-QgsSensorThingsExpansionDefinition::QgsSensorThingsExpansionDefinition( Qgis::SensorThingsEntity childEntity, const QString &orderBy, Qt::SortOrder sortOrder, int limit )
+QgsSensorThingsExpansionDefinition::QgsSensorThingsExpansionDefinition( Qgis::SensorThingsEntity childEntity, const QString &orderBy, Qt::SortOrder sortOrder, int limit, const QString &filter )
   : mChildEntity( childEntity )
   , mOrderBy( orderBy )
   , mSortOrder( sortOrder )
   , mLimit( limit )
+  , mFilter( filter )
 {
 
+}
+
+QgsSensorThingsExpansionDefinition QgsSensorThingsExpansionDefinition::defaultDefinitionForEntity( Qgis::SensorThingsEntity entity )
+{
+  switch ( entity )
+  {
+    case Qgis::SensorThingsEntity::Invalid:
+      return QgsSensorThingsExpansionDefinition();
+
+    case Qgis::SensorThingsEntity::Thing:
+    case Qgis::SensorThingsEntity::Location:
+    case Qgis::SensorThingsEntity::HistoricalLocation:
+    case Qgis::SensorThingsEntity::Sensor:
+    case Qgis::SensorThingsEntity::FeatureOfInterest:
+      // no special defaults for these entities
+      return QgsSensorThingsExpansionDefinition(
+               entity
+             );
+
+    case Qgis::SensorThingsEntity::Observation:
+      // default to descending sort by phenomenonTime
+      return QgsSensorThingsExpansionDefinition(
+               Qgis::SensorThingsEntity::Observation,
+               QStringLiteral( "phenomenonTime" ), Qt::SortOrder::DescendingOrder
+             );
+
+    case Qgis::SensorThingsEntity::Datastream:
+    case Qgis::SensorThingsEntity::MultiDatastream:
+    case Qgis::SensorThingsEntity::ObservedProperty:
+      // use smaller limit by default
+      return QgsSensorThingsExpansionDefinition(
+               entity,
+               QString(), Qt::SortOrder::AscendingOrder, 10
+             );
+  }
+  BUILTIN_UNREACHABLE
 }
 
 bool QgsSensorThingsExpansionDefinition::isValid() const
@@ -76,6 +113,16 @@ void QgsSensorThingsExpansionDefinition::setLimit( int limit )
   mLimit = limit;
 }
 
+QString QgsSensorThingsExpansionDefinition::filter() const
+{
+  return mFilter;
+}
+
+void QgsSensorThingsExpansionDefinition::setFilter( const QString &filter )
+{
+  mFilter = filter;
+}
+
 QString QgsSensorThingsExpansionDefinition::toString() const
 {
   if ( !isValid() )
@@ -87,6 +134,12 @@ QString QgsSensorThingsExpansionDefinition::toString() const
     parts.append( QStringLiteral( "orderby=%1,%2" ).arg( mOrderBy, mSortOrder == Qt::SortOrder::AscendingOrder ? QStringLiteral( "asc" ) : QStringLiteral( "desc" ) ) );
   if ( mLimit >= 0 )
     parts.append( QStringLiteral( "limit=%1" ).arg( mLimit ) );
+  if ( !mFilter.trimmed().isEmpty() )
+  {
+    QString escapedFilter = mFilter;
+    escapedFilter.replace( ':', QLatin1String( "\\colon" ) );
+    parts.append( QStringLiteral( "filter=%1" ).arg( escapedFilter ) );
+  }
   return parts.join( ':' );
 }
 
@@ -103,6 +156,7 @@ QgsSensorThingsExpansionDefinition QgsSensorThingsExpansionDefinition::fromStrin
     const QString &part = parts.at( i );
     const thread_local QRegularExpression orderByRegEx( QStringLiteral( "^orderby=(.*),(.*?)$" ) );
     const thread_local QRegularExpression orderLimitRegEx( QStringLiteral( "^limit=(\\d+)$" ) );
+    const thread_local QRegularExpression filterRegEx( QStringLiteral( "^filter=(.*)$" ) );
 
     const QRegularExpressionMatch orderByMatch = orderByRegEx.match( part );
     if ( orderByMatch.hasMatch() )
@@ -116,6 +170,15 @@ QgsSensorThingsExpansionDefinition QgsSensorThingsExpansionDefinition::fromStrin
     if ( limitMatch.hasMatch() )
     {
       definition.setLimit( limitMatch.captured( 1 ).toInt() );
+      continue;
+    }
+
+    const QRegularExpressionMatch filterMatch = filterRegEx.match( part );
+    if ( filterMatch.hasMatch() )
+    {
+      QString filter = filterMatch.captured( 1 );
+      filter.replace( QLatin1String( "\\colon" ), QLatin1String( ":" ) );
+      definition.setFilter( filter );
       continue;
     }
   }
@@ -163,6 +226,9 @@ QString QgsSensorThingsExpansionDefinition::asQueryString( Qgis::SensorThingsEnt
   if ( mLimit > -1 )
     queryOptions.append( QStringLiteral( "$top=%1" ).arg( mLimit ) );
 
+  if ( !mFilter.isEmpty() )
+    queryOptions.append( QStringLiteral( "$filter=%1" ).arg( mFilter ) );
+
   queryOptions.append( additionalOptions );
 
   if ( !queryOptions.isEmpty() )
@@ -179,7 +245,8 @@ bool QgsSensorThingsExpansionDefinition::operator==( const QgsSensorThingsExpans
   return mChildEntity == other.mChildEntity
          && mSortOrder == other.mSortOrder
          && mLimit == other.mLimit
-         && mOrderBy == other.mOrderBy;
+         && mOrderBy == other.mOrderBy
+         && mFilter == other.mFilter;
 }
 
 bool QgsSensorThingsExpansionDefinition::operator!=( const QgsSensorThingsExpansionDefinition &other ) const

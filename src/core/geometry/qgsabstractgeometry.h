@@ -27,7 +27,7 @@ email                : marco.hugentobler at sourcepole dot com
 #include "qgswkbptr.h"
 
 #ifndef SIP_RUN
-#include "json_fwd.hpp"
+#include <nlohmann/json_fwd.hpp>
 using namespace nlohmann;
 #endif
 
@@ -647,6 +647,20 @@ class CORE_EXPORT QgsAbstractGeometry
      * \param removeRedundantPoints if TRUE, then points which are redundant (e.g. they represent mid points on a straight line segment) will be skipped (since QGIS 3.38)
      */
     virtual QgsAbstractGeometry *snappedToGrid( double hSpacing, double vSpacing, double dSpacing = 0, double mSpacing = 0, bool removeRedundantPoints = false ) const = 0 SIP_FACTORY;
+
+    /**
+     * Simplifies the geometry by applying the Douglas Peucker simplification by distance
+     * algorithm.
+     *
+     * The caller takes ownership of the returned geometry. Curved geometries will be segmentized prior to simplification.
+     *
+     * If a simplified geometry cannot be calculated NULLPTR will be returned.
+     *
+     * The returned geometry may be invalid and contain self-intersecting rings.
+     *
+     * \since QGIS 3.38
+    */
+    virtual QgsAbstractGeometry *simplifyByDistance( double tolerance ) const = 0 SIP_FACTORY;
 
     /**
      * Removes duplicate nodes from the geometry, wherever removing the nodes does not result in a

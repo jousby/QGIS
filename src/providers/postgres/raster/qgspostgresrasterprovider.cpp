@@ -821,9 +821,9 @@ QgsPostgresRasterProvider *QgsPostgresRasterProvider::clone() const
   return provider;
 }
 
-QgsRasterDataProvider::ProviderCapabilities QgsPostgresRasterProvider::providerCapabilities() const
+Qgis::RasterProviderCapabilities QgsPostgresRasterProvider::providerCapabilities() const
 {
-  return QgsRasterDataProvider::ProviderCapability::ReadLayerMetadata;
+  return Qgis::RasterProviderCapability::ReadLayerMetadata;
 }
 
 
@@ -898,15 +898,13 @@ QString QgsPostgresRasterProvider::lastError()
   return mError;
 }
 
-int QgsPostgresRasterProvider::capabilities() const
+Qgis::RasterInterfaceCapabilities QgsPostgresRasterProvider::capabilities() const
 {
-  const int capability = QgsRasterDataProvider::Identify
-                         | QgsRasterDataProvider::IdentifyValue
-                         | QgsRasterDataProvider::Size
-                         // TODO:| QgsRasterDataProvider::BuildPyramids
-                         | QgsRasterDataProvider::Create
-                         | QgsRasterDataProvider::Remove
-                         | QgsRasterDataProvider::Prefetch;
+  const Qgis::RasterInterfaceCapabilities capability = Qgis::RasterInterfaceCapability::Identify
+      | Qgis::RasterInterfaceCapability::IdentifyValue
+      | Qgis::RasterInterfaceCapability::Size
+      // TODO:| QgsRasterDataProvider::BuildPyramids
+      | Qgis::RasterInterfaceCapability::Prefetch;
   return capability;
 }
 
@@ -1815,6 +1813,12 @@ bool QgsPostgresRasterProvider::loadFields()
           }
         }
       }
+      else if ( fieldTypeName == QLatin1String( "money" ) )
+      {
+        fieldType = QMetaType::Type::Double;
+        fieldSize = -1;
+        fieldPrec = 2;
+      }
       else if ( fieldTypeName == QLatin1String( "varchar" ) )
       {
         fieldType = QMetaType::Type::QString;
@@ -1854,7 +1858,6 @@ bool QgsPostgresRasterProvider::loadFields()
                 fieldTypeName == QLatin1String( "citext" ) ||
                 fieldTypeName == QLatin1String( "geometry" ) ||
                 fieldTypeName == QLatin1String( "inet" ) ||
-                fieldTypeName == QLatin1String( "money" ) ||
                 fieldTypeName == QLatin1String( "ltree" ) ||
                 fieldTypeName == QLatin1String( "uuid" ) ||
                 fieldTypeName == QLatin1String( "xml" ) ||

@@ -352,14 +352,22 @@ Qgis::DataProviderFlags QgsAmsProvider::flags() const
   return Qgis::DataProviderFlag::FastExtent2D;
 }
 
-QgsRasterDataProvider::ProviderCapabilities QgsAmsProvider::providerCapabilities() const
+Qgis::RasterProviderCapabilities QgsAmsProvider::providerCapabilities() const
 {
-  return ProviderCapability::ReadLayerMetadata | ProviderCapability::ReloadData;
+  return Qgis::RasterProviderCapability::ReadLayerMetadata | Qgis::RasterProviderCapability::ReloadData;
 }
 
 QString QgsAmsProvider::name() const { return AMS_PROVIDER_KEY; }
 
 QString QgsAmsProvider::providerKey() { return AMS_PROVIDER_KEY; }
+
+Qgis::RasterInterfaceCapabilities QgsAmsProvider::capabilities() const
+{
+  return Qgis::RasterInterfaceCapability::Identify
+         | Qgis::RasterInterfaceCapability::IdentifyText
+         | Qgis::RasterInterfaceCapability::IdentifyFeature
+         | Qgis::RasterInterfaceCapability::Prefetch;
+}
 
 QString QgsAmsProvider::description() const { return AMS_PROVIDER_DESCRIPTION; }
 

@@ -102,6 +102,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructForwardRenderPass()
   //  +-----------------+
 
   mMainCameraSelector = new Qt3DRender::QCameraSelector;
+  mMainCameraSelector->setObjectName( "Forward render pass CameraSelector" );
   mMainCameraSelector->setCamera( mMainCamera );
 
   mForwardRenderLayerFilter = new Qt3DRender::QLayerFilter( mMainCameraSelector );
@@ -225,6 +226,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructForwardRenderPass()
 Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructShadowRenderPass()
 {
   mLightCameraSelectorShadowPass = new Qt3DRender::QCameraSelector;
+  mLightCameraSelectorShadowPass->setObjectName( "Shadow render pass CameraSelector" );
   mLightCameraSelectorShadowPass->setCamera( mLightCamera );
 
   mShadowSceneEntitiesFilter = new Qt3DRender::QLayerFilter( mLightCameraSelectorShadowPass );
@@ -274,6 +276,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructShadowRenderPass()
 Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructPostprocessingPass()
 {
   mPostProcessingCameraSelector = new Qt3DRender::QCameraSelector;
+  mPostProcessingCameraSelector->setObjectName( "Postprocessing pass CameraSelector" );
   mPostProcessingCameraSelector->setCamera( mLightCamera );
 
   mPostprocessPassLayerFilter = new Qt3DRender::QLayerFilter( mPostProcessingCameraSelector );
@@ -281,6 +284,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructPostprocessingPass()
   mPostprocessClearBuffers = new Qt3DRender::QClearBuffers( mPostprocessPassLayerFilter );
 
   mRenderCaptureTargetSelector = new Qt3DRender::QRenderTargetSelector( mPostprocessClearBuffers );
+  mRenderCaptureTargetSelector->setObjectName( "Postprocessing pass RenderTargetSelector" );
 
   Qt3DRender::QRenderTarget *renderTarget = new Qt3DRender::QRenderTarget( mRenderCaptureTargetSelector );
 
@@ -297,6 +301,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructPostprocessingPass()
   mRenderCaptureColorTexture->setFormat( Qt3DRender::QAbstractTexture::RGB8_UNorm );
   mRenderCaptureColorTexture->setMinificationFilter( Qt3DRender::QAbstractTexture::Linear );
   mRenderCaptureColorTexture->setMagnificationFilter( Qt3DRender::QAbstractTexture::Linear );
+  mRenderCaptureColorTexture->setObjectName( "PostProcessingPass::ColorTarget" );
 
   // Hook the texture up to our output, and the output up to this object.
   colorOutput->setTexture( mRenderCaptureColorTexture );
@@ -312,6 +317,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructPostprocessingPass()
   mRenderCaptureDepthTexture->setMagnificationFilter( Qt3DRender::QAbstractTexture::Linear );
   mRenderCaptureDepthTexture->setComparisonFunction( Qt3DRender::QAbstractTexture::CompareLessEqual );
   mRenderCaptureDepthTexture->setComparisonMode( Qt3DRender::QAbstractTexture::CompareRefToTexture );
+  mRenderCaptureDepthTexture->setObjectName( "PostProcessingPass::DepthTarget" );
 
   depthOutput->setTexture( mRenderCaptureDepthTexture );
   renderTarget->addOutput( depthOutput );
@@ -322,6 +328,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructPostprocessingPass()
 
   mPostprocessingEntity = new QgsPostprocessingEntity( this, mRootEntity );
   mPostprocessPassLayerFilter->addLayer( mPostprocessingEntity->layer() );
+  mPostprocessingEntity->setObjectName( "PostProcessingPassEntity" );
 
   return mPostProcessingCameraSelector;
 }
@@ -329,6 +336,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructPostprocessingPass()
 Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructAmbientOcclusionRenderPass()
 {
   mAmbientOcclusionRenderCameraSelector = new Qt3DRender::QCameraSelector;
+  mAmbientOcclusionRenderCameraSelector->setObjectName( "AmbientOcclusion render pass CameraSelector" );
   mAmbientOcclusionRenderCameraSelector->setCamera( mMainCamera );
 
   mAmbientOcclusionRenderStateSet = new Qt3DRender::QRenderStateSet( mAmbientOcclusionRenderCameraSelector );
@@ -344,13 +352,13 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructAmbientOcclusionRenderPass(
   mAmbientOcclusionRenderLayerFilter = new Qt3DRender::QLayerFilter( mAmbientOcclusionRenderStateSet );
 
   mAmbientOcclusionRenderCaptureTargetSelector = new Qt3DRender::QRenderTargetSelector( mAmbientOcclusionRenderLayerFilter );
-  Qt3DRender::QRenderTarget *depthRenderTarget = new Qt3DRender::QRenderTarget( mAmbientOcclusionRenderCaptureTargetSelector );
+  Qt3DRender::QRenderTarget *colorRenderTarget = new Qt3DRender::QRenderTarget( mAmbientOcclusionRenderCaptureTargetSelector );
 
   // The lifetime of the objects created here is managed
   // automatically, as they become children of this object.
 
   // Create a render target output for rendering color.
-  Qt3DRender::QRenderTargetOutput *colorOutput = new Qt3DRender::QRenderTargetOutput( depthRenderTarget );
+  Qt3DRender::QRenderTargetOutput *colorOutput = new Qt3DRender::QRenderTargetOutput( colorRenderTarget );
   colorOutput->setAttachmentPoint( Qt3DRender::QRenderTargetOutput::Color0 );
 
   // Create a texture to render into.
@@ -362,9 +370,9 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructAmbientOcclusionRenderPass(
 
   // Hook the texture up to our output, and the output up to this object.
   colorOutput->setTexture( mAmbientOcclusionRenderTexture );
-  depthRenderTarget->addOutput( colorOutput );
+  colorRenderTarget->addOutput( colorOutput );
 
-  mAmbientOcclusionRenderCaptureTargetSelector->setTarget( depthRenderTarget );
+  mAmbientOcclusionRenderCaptureTargetSelector->setTarget( colorRenderTarget );
 
   mAmbientOcclusionRenderEntity = new QgsAmbientOcclusionRenderEntity( mForwardDepthTexture, mMainCamera, mRootEntity );
   mAmbientOcclusionRenderLayerFilter->addLayer( mAmbientOcclusionRenderEntity->layer() );
@@ -375,6 +383,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructAmbientOcclusionRenderPass(
 Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructAmbientOcclusionBlurPass()
 {
   mAmbientOcclusionBlurCameraSelector = new Qt3DRender::QCameraSelector;
+  mAmbientOcclusionBlurCameraSelector->setObjectName( "AmbientOcclusion blur pass CameraSelector" );
   mAmbientOcclusionBlurCameraSelector->setCamera( mMainCamera );
 
   mAmbientOcclusionBlurStateSet = new Qt3DRender::QRenderStateSet( mAmbientOcclusionBlurCameraSelector );
@@ -422,6 +431,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructAmbientOcclusionBlurPass()
 Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructRubberBandsPass()
 {
   mRubberBandsCameraSelector = new Qt3DRender::QCameraSelector;
+  mRubberBandsCameraSelector->setObjectName( "RubberBands Pass CameraSelector" );
   mRubberBandsCameraSelector->setCamera( mMainCamera );
 
   mRubberBandsLayerFilter = new Qt3DRender::QLayerFilter( mRubberBandsCameraSelector );
@@ -448,6 +458,7 @@ Qt3DRender::QFrameGraphNode *QgsFrameGraph::constructDepthRenderPass()
   // depth buffer render to copy pass
 
   mDepthRenderCameraSelector = new Qt3DRender::QCameraSelector;
+  mDepthRenderCameraSelector->setObjectName( "Depth render view CameraSelector" );
   mDepthRenderCameraSelector->setCamera( mMainCamera );
 
   mDepthRenderStateSet = new Qt3DRender::QRenderStateSet( mDepthRenderCameraSelector );
@@ -619,6 +630,8 @@ QgsFrameGraph::QgsFrameGraph( QSurface *surface, QSize s, Qt3DRender::QCamera *m
   mTransparentObjectsPassLayer = new Qt3DRender::QLayer;
   mRubberBandsLayer = new Qt3DRender::QLayer;
 
+  mRubberBandsLayer->setObjectName( "mRubberBandsLayer" );
+
   mPreviewLayer->setRecursive( true );
   mCastShadowsLayer->setRecursive( true );
   mForwardRenderLayer->setRecursive( true );
@@ -643,6 +656,7 @@ QgsFrameGraph::QgsFrameGraph( QSurface *surface, QSize s, Qt3DRender::QCamera *m
 
   // rubber bands (they should be always on top)
   Qt3DRender::QFrameGraphNode *rubberBandsPass = constructRubberBandsPass();
+  rubberBandsPass->setObjectName( "rubberBandsPass" );
   rubberBandsPass->setParent( mMainViewPort );
 
   // shadow rendering pass
@@ -663,8 +677,10 @@ QgsFrameGraph::QgsFrameGraph( QSurface *surface, QSize s, Qt3DRender::QCamera *m
   // post process
   Qt3DRender::QFrameGraphNode *postprocessingPass = constructPostprocessingPass();
   postprocessingPass->setParent( mMainViewPort );
+  postprocessingPass->setObjectName( "PostProcessingPass" );
 
   mRubberBandsRootEntity = new Qt3DCore::QEntity( mRootEntity );
+  mRubberBandsRootEntity->setObjectName( "mRubberBandsRootEntity" );
   mRubberBandsRootEntity->addComponent( mRubberBandsLayer );
 
   // textures preview pass

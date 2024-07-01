@@ -319,6 +319,7 @@ QgsFeatureIds QgsSensorThingsSharedData::getFeatureIdsInExtent( const QgsRectang
   if ( hasCachedAllFeatures() || mCachedExtent.contains( extentGeom ) )
   {
     // all features cached locally, rely on local spatial index
+    nextPage.clear();
     return qgis::listToSet( mSpatialIndex.intersects( requestExtent ) );
   }
 
@@ -580,7 +581,7 @@ bool QgsSensorThingsSharedData::processFeatureRequest( QString &nextPage, QgsFee
                 return QVariant();
               };
 
-              auto getDateTimeRange = []( const basic_json<> &json, const char *tag, bool allowInstant = false ) -> std::pair< QVariant, QVariant >
+              auto getDateTimeRange = []( const basic_json<> &json, const char *tag ) -> std::pair< QVariant, QVariant >
               {
                 if ( !json.contains( tag ) )
                   return { QVariant(), QVariant() };
@@ -598,10 +599,11 @@ bool QgsSensorThingsSharedData::processFeatureRequest( QString &nextPage, QgsFee
                       QDateTime::fromString( rangeParts.at( 1 ), Qt::ISODateWithMs )
                     };
                   }
-                  else if ( allowInstant )
+                  else
                   {
                     const QDateTime instant = QDateTime::fromString( rangeString, Qt::ISODateWithMs );
-                    return { instant, instant };
+                    if ( instant.isValid() )
+                      return { instant, instant };
                   }
                 }
 
@@ -675,7 +677,7 @@ bool QgsSensorThingsSharedData::processFeatureRequest( QString &nextPage, QgsFee
 
                   case Qgis::SensorThingsEntity::Datastream:
                   {
-                    std::pair< QVariant, QVariant > phenomenonTime = getDateTimeRange( entityData, "phenomenonTime", true );
+                    std::pair< QVariant, QVariant > phenomenonTime = getDateTimeRange( entityData, "phenomenonTime" );
                     std::pair< QVariant, QVariant > resultTime = getDateTimeRange( entityData, "resultTime" );
                     attributes
                         << iotId

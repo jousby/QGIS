@@ -170,7 +170,7 @@ void QgsRasterAttributeTableWidget::updateButtons()
 {
   const bool enableEditingButtons( static_cast<bool>( mAttributeTableBuffer ) && mEditable && mRATView->selectionModel()->currentIndex().isValid() );
   mActionToggleEditing->setChecked( mEditable );
-  mActionToggleEditing->setEnabled( enableEditingButtons );
+  mActionToggleEditing->setEnabled( mAttributeTableBuffer && mRasterLayer );
   mActionAddColumn->setEnabled( mEditable );
   mActionRemoveColumn->setEnabled( enableEditingButtons );
   mActionAddRow->setEnabled( enableEditingButtons );
@@ -255,7 +255,7 @@ void QgsRasterAttributeTableWidget::saveChanges()
       *attributeTable = *mAttributeTableBuffer;
       QString errorMessage;
       QString newPath { attributeTable->filePath() };
-      const bool nativeRatSupported = mRasterLayer->dataProvider()->providerCapabilities().testFlag( QgsRasterDataProvider::ProviderCapability::NativeRasterAttributeTable );
+      const bool nativeRatSupported = mRasterLayer->dataProvider()->providerCapabilities().testFlag( Qgis::RasterProviderCapability::NativeRasterAttributeTable );
       bool saveToNative { false };
 
       if ( newPath.isEmpty() && ! nativeRatSupported )

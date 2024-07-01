@@ -337,6 +337,7 @@ class LayoutContextSettingsRestorer
       , mPreviousTextFormat( layout->renderContext().textRenderFormat() )
       , mPreviousExportLayer( layout->renderContext().currentExportLayer() )
       , mPreviousSimplifyMethod( layout->renderContext().simplifyMethod() )
+      , mPreviousMaskSettings( layout->renderContext().maskSettings() )
       , mExportThemes( layout->renderContext().exportThemes() )
       , mPredefinedScales( layout->renderContext().predefinedScales() )
     {
@@ -352,6 +353,7 @@ class LayoutContextSettingsRestorer
       mLayout->renderContext().setCurrentExportLayer( mPreviousExportLayer );
       Q_NOWARN_DEPRECATED_POP
       mLayout->renderContext().setSimplifyMethod( mPreviousSimplifyMethod );
+      mLayout->renderContext().setMaskSettings( mPreviousMaskSettings );
       mLayout->renderContext().setExportThemes( mExportThemes );
       mLayout->renderContext().setPredefinedScales( mPredefinedScales );
     }
@@ -366,6 +368,7 @@ class LayoutContextSettingsRestorer
     Qgis::TextRenderFormat mPreviousTextFormat = Qgis::TextRenderFormat::AlwaysOutlines;
     int mPreviousExportLayer = 0;
     QgsVectorSimplifyMethod mPreviousSimplifyMethod;
+    QgsMaskRenderSettings mPreviousMaskSettings;
     QStringList mExportThemes;
     QVector< double > mPredefinedScales;
 
@@ -549,6 +552,7 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( const QString &f
   ( void )contextRestorer;
   mLayout->renderContext().setDpi( settings.dpi );
   mLayout->renderContext().setPredefinedScales( settings.predefinedMapScales );
+  mLayout->renderContext().setMaskSettings( createExportMaskSettings() );
 
   if ( settings.simplifyGeometries )
   {
@@ -774,6 +778,7 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToPdf( QgsAbstractLayou
 
     iterator->layout()->renderContext().setFlags( settings.flags );
     iterator->layout()->renderContext().setPredefinedScales( settings.predefinedMapScales );
+    iterator->layout()->renderContext().setMaskSettings( createExportMaskSettings() );
 
     if ( settings.simplifyGeometries )
     {
@@ -1023,6 +1028,7 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::exportToSvg( const QString &f
   mLayout->renderContext().setFlag( QgsLayoutRenderContext::FlagForceVectorOutput, settings.forceVectorOutput );
   mLayout->renderContext().setTextRenderFormat( s.textRenderFormat );
   mLayout->renderContext().setPredefinedScales( settings.predefinedMapScales );
+  mLayout->renderContext().setMaskSettings( createExportMaskSettings() );
 
   if ( settings.simplifyGeometries )
   {
@@ -1900,12 +1906,21 @@ QgsLayoutExporter::ExportResult QgsLayoutExporter::handleLayeredExport( const QL
 QgsVectorSimplifyMethod QgsLayoutExporter::createExportSimplifyMethod()
 {
   QgsVectorSimplifyMethod simplifyMethod;
-  simplifyMethod.setSimplifyHints( QgsVectorSimplifyMethod::GeometrySimplification );
+  simplifyMethod.setSimplifyHints( Qgis::VectorRenderingSimplificationFlag::GeometrySimplification );
   simplifyMethod.setForceLocalOptimization( true );
   // we use SnappedToGridGlobal, because it avoids gaps and slivers between previously adjacent polygons
-  simplifyMethod.setSimplifyAlgorithm( QgsVectorSimplifyMethod::SnappedToGridGlobal );
+  simplifyMethod.setSimplifyAlgorithm( Qgis::VectorSimplificationAlgorithm::SnappedToGridGlobal );
   simplifyMethod.setThreshold( 0.1f ); // (pixels). We are quite conservative here. This could possibly be bumped all the way up to 1. But let's play it safe.
   return simplifyMethod;
+}
+
+QgsMaskRenderSettings QgsLayoutExporter::createExportMaskSettings()
+{
+  QgsMaskRenderSettings settings;
+  // this is quite a conservative setting -- I think we could make this more aggressive and get smaller file sizes
+  // without too much loss of quality...
+  settings.setSimplificationTolerance( 0.5 );
+  return settings;
 }
 
 void QgsLayoutExporter::computeWorldFileParameters( double &a, double &b, double &c, double &d, double &e, double &f, double dpi ) const

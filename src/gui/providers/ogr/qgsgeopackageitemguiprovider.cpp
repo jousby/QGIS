@@ -22,6 +22,7 @@
 #include <QMenu>
 #include <QString>
 #include <QMessageBox>
+#include <QFileDialog>
 
 #include "qgsvectorlayer.h"
 #include "qgsrasterlayer.h"
@@ -40,6 +41,7 @@
 #include "qgsmessagebar.h"
 #include "qgsprovidermetadata.h"
 #include "qgsogrproviderutils.h"
+#include "qgsfileutils.h"
 
 void QgsGeoPackageItemGuiProvider::populateContextMenu( QgsDataItem *item, QMenu *menu,
     const QList<QgsDataItem *> &selectedItems,
@@ -74,13 +76,22 @@ void QgsGeoPackageItemGuiProvider::populateContextMenu( QgsDataItem *item, QMenu
     connect( actionNew, &QAction::triggered, rootItem, &QgsGeoPackageRootItem::newConnection );
     menu->addAction( actionNew );
 
-    QAction *actionCreateDatabase = new QAction( tr( "Create Database…" ), menu );
     const QPointer< QgsGeoPackageRootItem > rootItemPointer( rootItem );
+
+    QAction *actionCreateDatabase = new QAction( tr( "Create Database…" ), menu );
     connect( actionCreateDatabase, &QAction::triggered, this, [this, rootItemPointer ]
     {
       createDatabase( rootItemPointer );
     } );
     menu->addAction( actionCreateDatabase );
+
+    QAction *actionCreateDatabaseAndLayer = new QAction( tr( "Create Database and Layer…" ), menu );
+    connect( actionCreateDatabaseAndLayer, &QAction::triggered, this, [this, rootItemPointer ]
+    {
+      createDatabaseAndLayer( rootItemPointer );
+    } );
+    menu->addAction( actionCreateDatabaseAndLayer );
+
   }
 
   if ( QgsGeoPackageCollectionItem *collectionItem = qobject_cast< QgsGeoPackageCollectionItem * >( item ) )
@@ -107,8 +118,42 @@ void QgsGeoPackageItemGuiProvider::populateContextMenu( QgsDataItem *item, QMenu
 
     if ( QgsOgrDbConnection::connectionList( QStringLiteral( "GPKG" ) ).contains( collectionItem->name() ) )
     {
-      QAction *actionDeleteConnection = new QAction( tr( "Remove Connection" ), menu );
-      connect( actionDeleteConnection, &QAction::triggered, collectionItem, &QgsGeoPackageConnectionItem::deleteConnection );
+      QList< QgsGeoPackageCollectionItem * > connectionItems = QgsDataItem::filteredItems<QgsGeoPackageCollectionItem>( selectedItems );
+      connectionItems.erase( std::remove_if( connectionItems.begin(), connectionItems.end(), []( QgsGeoPackageCollectionItem * connectionItem )
+      {
+        return !QgsOgrDbConnection::connectionList( QStringLiteral( "GPKG" ) ).contains( connectionItem->name() );
+      } ), connectionItems.end() );
+
+      QAction *actionDeleteConnection = new QAction( connectionItems.size() > 1 ? tr( "Remove Connections…" ) : tr( "Remove Connection…" ), menu );
+      if ( connectionItems.size() > 1 )
+      {
+        connect( actionDeleteConnection, &QAction::triggered, this, [connectionItems]
+        {
+          QStringList connectionNames;
+          connectionNames.reserve( connectionItems.size() );
+          for ( QgsGeoPackageCollectionItem *item : connectionItems )
+          {
+            connectionNames << item->name();
+          }
+          QPointer< QgsDataItem > firstParent( connectionItems.at( 0 )->parent() );
+          if ( QMessageBox::question( nullptr,
+                                      QObject::tr( "Remove Connections" ),
+                                      QObject::tr( "Are you sure you want to remove all %1 selected connections?" ).arg( connectionItems.size() ),
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No ) != QMessageBox::Yes )
+            return;
+
+          for ( const QString &connectionName : std::as_const( connectionNames ) )
+          {
+            QgsOgrDbConnection::deleteConnection( connectionName );
+          }
+
+          firstParent->refreshConnections( QStringLiteral( "GPKG" ) );
+        } );
+      }
+      else
+      {
+        connect( actionDeleteConnection, &QAction::triggered, collectionItem, &QgsGeoPackageConnectionItem::deleteConnection );
+      }
       menu->addAction( actionDeleteConnection );
     }
     else
@@ -313,8 +358,47 @@ void QgsGeoPackageItemGuiProvider::createDatabase( const QPointer< QgsGeoPackage
 {
   if ( item )
   {
+    QgsSettings settings;
+    const QString lastUsedDir = settings.value( QStringLiteral( "UI/lastGeoPackageDir" ), QDir::homePath() ).toString();
+
+    QString filename = QFileDialog::getSaveFileName( nullptr, tr( "New GeoPackage" ),
+                       lastUsedDir,
+                       tr( "GeoPackage" ) + " (*.gpkg *.GPKG)" );
+    if ( filename.isEmpty() )
+    {
+      return;
+    }
+
+    filename = QgsFileUtils::ensureFileNameHasExtension( filename, QStringList() << QStringLiteral( "gpkg" ) );
+
+    const QFileInfo fileInfo( filename );
+    settings.setValue( QStringLiteral( "UI/lastGeoPackageDir" ), fileInfo.absoluteDir().absolutePath() );
+
+    if ( QgsProviderMetadata *ogrMetadata = QgsProviderRegistry::instance()->providerMetadata( QStringLiteral( "ogr" ) ) )
+    {
+      QString error;
+      if ( ! ogrMetadata->createDatabase( filename, error ) )
+      {
+        QMessageBox::critical( nullptr, tr( "New GeoPackage" ), error );
+        return;
+      }
+
+      // Call QFileInfo to normalize paths, see: https://github.com/qgis/QGIS/issues/36832
+      if ( QgsOgrProviderUtils::saveConnection( fileInfo.filePath(), QStringLiteral( "GPKG" ) ) )
+      {
+        item->refreshConnections();
+      }
+    }
+  }
+}
+
+void QgsGeoPackageItemGuiProvider::createDatabaseAndLayer( const QPointer< QgsGeoPackageRootItem > &item )
+{
+  if ( item )
+  {
     QgsNewGeoPackageLayerDialog dialog( nullptr );
     dialog.setCrs( QgsProject::instance()->defaultCrsForNewLayers() );
+
     if ( dialog.exec() == QDialog::Accepted )
     {
       // Call QFileInfo to normalize paths, see: https://github.com/qgis/QGIS/issues/36832

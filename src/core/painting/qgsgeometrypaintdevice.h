@@ -19,6 +19,7 @@
 #include "qgis_core.h"
 #include "qgis_sip.h"
 #include "qgsgeometrycollection.h"
+#include "qgsgeometry.h"
 
 #include <QPainterPath>
 #include <QPaintDevice>
@@ -46,6 +47,22 @@ class QgsGeometryPaintEngine: public QPaintEngine
      * pen configuration.
      */
     QgsGeometryPaintEngine( bool usePathStroker = false );
+
+    /**
+     * Sets the number of \a segments to use when drawing stroked paths with a rounded pen.
+     *
+     * The default is 8 segments, a smaller number will result in simpler paths.
+     */
+    void setStrokedPathSegments( int segments );
+
+    /**
+     * Sets a simplification tolerance (in painter units) to use for on-the-fly simplification of geometries while rendering.
+     *
+     * This will result in simpler, generalised paths.
+     *
+     * Set \a tolerance to 0 to disable simplification. (No simplification is the default behavior).
+     */
+    void setSimplificationTolerance( double tolerance );
 
     bool begin( QPaintDevice * ) final;
     bool end() final;
@@ -92,7 +109,8 @@ class QgsGeometryPaintEngine: public QPaintEngine
     bool mUsePathStroker = false;
     QPen mPen;
     QgsGeometryCollection mGeometry;
-    static constexpr int mStrokedPathsSegments = 8;
+    int mStrokedPathsSegments = 8;
+    double mSimplifyTolerance = 0;
 };
 
 #endif
@@ -116,6 +134,22 @@ class CORE_EXPORT QgsGeometryPaintDevice: public QPaintDevice
      */
     QgsGeometryPaintDevice( bool usePathStroker = false );
 
+    /**
+     * Sets the number of \a segments to use when drawing stroked paths with a rounded pen.
+     *
+     * The default is 8 segments, a smaller number will result in simpler paths.
+     */
+    void setStrokedPathSegments( int segments );
+
+    /**
+     * Sets a simplification tolerance (in painter units) to use for on-the-fly simplification of geometries while rendering.
+     *
+     * This will result in simpler, generalised paths.
+     *
+     * Set \a tolerance to 0 to disable simplification. (No simplification is the default behavior).
+     */
+    void setSimplificationTolerance( double tolerance );
+
     QPaintEngine *paintEngine() const override;
 
     int metric( PaintDeviceMetric metric ) const override;
@@ -124,6 +158,13 @@ class CORE_EXPORT QgsGeometryPaintDevice: public QPaintDevice
      * Returns the rendered geometry.
      */
     const QgsAbstractGeometry &geometry() const;
+
+    /**
+     * Converts a painter \a path to a QgsGeometry.
+     *
+     * \since QGIS 3.38.1
+     */
+    static QgsGeometry painterPathToGeometry( const QPainterPath &path );
 
   private:
 

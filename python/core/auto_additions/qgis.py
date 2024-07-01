@@ -94,6 +94,13 @@ Qgis.LayerFilter.__doc__ = "Filter for layers\n\n.. versionadded:: 3.34.\n\n" + 
 # --
 Qgis.LayerFilters.baseClass = Qgis
 LayerFilters = Qgis  # dirty hack since SIP seems to introduce the flags in module
+# monkey patching scoped based enum
+Qgis.LoadStyleFlag.IgnoreMissingStyleErrors.__doc__ = "If the style is missing, then don't flag it as an error. This flag can be used when the caller is not certain that a style exists, and accordingly a failure to find the style does not indicate an issue with loading the style itself."
+Qgis.LoadStyleFlag.__doc__ = "Flags for loading layer styles.\n\n.. versionadded:: 3.38\n\n" + '* ``IgnoreMissingStyleErrors``: ' + Qgis.LoadStyleFlag.IgnoreMissingStyleErrors.__doc__
+# --
+Qgis.LoadStyleFlag.baseClass = Qgis
+Qgis.LoadStyleFlags.baseClass = Qgis
+LoadStyleFlags = Qgis  # dirty hack since SIP seems to introduce the flags in module
 QgsWkbTypes.Type = Qgis.WkbType
 # monkey patching scoped based enum
 QgsWkbTypes.Unknown = Qgis.WkbType.Unknown
@@ -614,7 +621,10 @@ QgsSymbol.RenderHint = Qgis.SymbolRenderHint
 QgsSymbol.DynamicRotation = Qgis.SymbolRenderHint.DynamicRotation
 QgsSymbol.DynamicRotation.is_monkey_patched = True
 QgsSymbol.DynamicRotation.__doc__ = "Rotation of symbol may be changed during rendering and symbol should not be cached"
-Qgis.SymbolRenderHint.__doc__ = "Flags controlling behavior of symbols during rendering\n\n.. versionadded:: 3.20\n\n" + '* ``DynamicRotation``: ' + Qgis.SymbolRenderHint.DynamicRotation.__doc__
+QgsSymbol.IsSymbolLayerSubSymbol = Qgis.SymbolRenderHint.IsSymbolLayerSubSymbol
+QgsSymbol.IsSymbolLayerSubSymbol.is_monkey_patched = True
+QgsSymbol.IsSymbolLayerSubSymbol.__doc__ = "Symbol is being rendered as a sub-symbol of a QgsSymbolLayer (since QGIS 3.38)"
+Qgis.SymbolRenderHint.__doc__ = "Flags controlling behavior of symbols during rendering\n\n.. versionadded:: 3.20\n\n" + '* ``DynamicRotation``: ' + Qgis.SymbolRenderHint.DynamicRotation.__doc__ + '\n' + '* ``IsSymbolLayerSubSymbol``: ' + Qgis.SymbolRenderHint.IsSymbolLayerSubSymbol.__doc__
 # --
 Qgis.SymbolRenderHint.baseClass = Qgis
 QgsSymbol.RenderHints = Qgis.SymbolRenderHints
@@ -646,7 +656,8 @@ Qgis.SymbolPreviewFlags.baseClass = Qgis
 SymbolPreviewFlags = Qgis  # dirty hack since SIP seems to introduce the flags in module
 # monkey patching scoped based enum
 Qgis.SymbolLayerFlag.DisableFeatureClipping.__doc__ = "If present, indicates that features should never be clipped to the map extent during rendering"
-Qgis.SymbolLayerFlag.__doc__ = "Flags controlling behavior of symbol layers\n\n.. note::\n\n   These differ from Qgis.SymbolLayerUserFlag in that Qgis.SymbolLayerFlag flags are used to reflect the inbuilt properties\n   of a symbol layer type, whereas Qgis.SymbolLayerUserFlag are optional, user controlled flags which can be toggled\n   for a symbol layer.\n\n.. versionadded:: 3.22\n\n" + '* ``DisableFeatureClipping``: ' + Qgis.SymbolLayerFlag.DisableFeatureClipping.__doc__
+Qgis.SymbolLayerFlag.CanCalculateMaskGeometryPerFeature.__doc__ = "If present, indicates that mask geometry can safely be calculated per feature for the symbol layer. This avoids using the entire symbol layer's mask geometry for every feature rendered, considerably simplifying vector exports and resulting in much smaller file sizes. (Since QGIS 3.38)"
+Qgis.SymbolLayerFlag.__doc__ = "Flags controlling behavior of symbol layers\n\n.. note::\n\n   These differ from Qgis.SymbolLayerUserFlag in that Qgis.SymbolLayerFlag flags are used to reflect the inbuilt properties\n   of a symbol layer type, whereas Qgis.SymbolLayerUserFlag are optional, user controlled flags which can be toggled\n   for a symbol layer.\n\n.. versionadded:: 3.22\n\n" + '* ``DisableFeatureClipping``: ' + Qgis.SymbolLayerFlag.DisableFeatureClipping.__doc__ + '\n' + '* ``CanCalculateMaskGeometryPerFeature``: ' + Qgis.SymbolLayerFlag.CanCalculateMaskGeometryPerFeature.__doc__
 # --
 Qgis.SymbolLayerFlag.baseClass = Qgis
 Qgis.SymbolLayerFlags.baseClass = Qgis
@@ -733,7 +744,10 @@ QgsDataItem.ItemRepresentsFile.__doc__ = "Item's path() directly represents a fi
 QgsDataItem.RefreshChildrenWhenItemIsRefreshed = Qgis.BrowserItemCapability.RefreshChildrenWhenItemIsRefreshed
 QgsDataItem.RefreshChildrenWhenItemIsRefreshed.is_monkey_patched = True
 QgsDataItem.RefreshChildrenWhenItemIsRefreshed.__doc__ = "When the item is refreshed, all its populated children will also be refreshed in turn (since QGIS 3.26)"
-Qgis.BrowserItemCapability.__doc__ = "Browser item capabilities.\n\n.. versionadded:: 3.20\n\n" + '* ``NoCapabilities``: ' + Qgis.BrowserItemCapability.NoCapabilities.__doc__ + '\n' + '* ``SetCrs``: ' + Qgis.BrowserItemCapability.SetCrs.__doc__ + '\n' + '* ``Fertile``: ' + Qgis.BrowserItemCapability.Fertile.__doc__ + '\n' + '* ``Fast``: ' + Qgis.BrowserItemCapability.Fast.__doc__ + '\n' + '* ``Collapse``: ' + Qgis.BrowserItemCapability.Collapse.__doc__ + '\n' + '* ``Rename``: ' + Qgis.BrowserItemCapability.Rename.__doc__ + '\n' + '* ``Delete``: ' + Qgis.BrowserItemCapability.Delete.__doc__ + '\n' + '* ``ItemRepresentsFile``: ' + Qgis.BrowserItemCapability.ItemRepresentsFile.__doc__ + '\n' + '* ``RefreshChildrenWhenItemIsRefreshed``: ' + Qgis.BrowserItemCapability.RefreshChildrenWhenItemIsRefreshed.__doc__
+QgsDataItem.ReadOnly = Qgis.BrowserItemCapability.ReadOnly
+QgsDataItem.ReadOnly.is_monkey_patched = True
+QgsDataItem.ReadOnly.__doc__ = "Item is read only (since QGIS 3.40)"
+Qgis.BrowserItemCapability.__doc__ = "Browser item capabilities.\n\n.. versionadded:: 3.20\n\n" + '* ``NoCapabilities``: ' + Qgis.BrowserItemCapability.NoCapabilities.__doc__ + '\n' + '* ``SetCrs``: ' + Qgis.BrowserItemCapability.SetCrs.__doc__ + '\n' + '* ``Fertile``: ' + Qgis.BrowserItemCapability.Fertile.__doc__ + '\n' + '* ``Fast``: ' + Qgis.BrowserItemCapability.Fast.__doc__ + '\n' + '* ``Collapse``: ' + Qgis.BrowserItemCapability.Collapse.__doc__ + '\n' + '* ``Rename``: ' + Qgis.BrowserItemCapability.Rename.__doc__ + '\n' + '* ``Delete``: ' + Qgis.BrowserItemCapability.Delete.__doc__ + '\n' + '* ``ItemRepresentsFile``: ' + Qgis.BrowserItemCapability.ItemRepresentsFile.__doc__ + '\n' + '* ``RefreshChildrenWhenItemIsRefreshed``: ' + Qgis.BrowserItemCapability.RefreshChildrenWhenItemIsRefreshed.__doc__ + '\n' + '* ``ReadOnly``: ' + Qgis.BrowserItemCapability.ReadOnly.__doc__
 # --
 Qgis.BrowserItemCapability.baseClass = Qgis
 QgsDataItem.Capabilities = Qgis.BrowserItemCapabilities
@@ -2259,7 +2273,10 @@ QgsMapSettings.ForceRasterMasks.__doc__ = "Force symbol masking to be applied us
 QgsMapSettings.RecordProfile = Qgis.MapSettingsFlag.RecordProfile
 QgsMapSettings.RecordProfile.is_monkey_patched = True
 QgsMapSettings.RecordProfile.__doc__ = "Enable run-time profiling while rendering (since QGIS 3.34)"
-Qgis.MapSettingsFlag.__doc__ = "Flags which adjust the way maps are rendered.\n\n.. versionadded:: 3.22\n\n" + '* ``Antialiasing``: ' + Qgis.MapSettingsFlag.Antialiasing.__doc__ + '\n' + '* ``DrawEditingInfo``: ' + Qgis.MapSettingsFlag.DrawEditingInfo.__doc__ + '\n' + '* ``ForceVectorOutput``: ' + Qgis.MapSettingsFlag.ForceVectorOutput.__doc__ + '\n' + '* ``UseAdvancedEffects``: ' + Qgis.MapSettingsFlag.UseAdvancedEffects.__doc__ + '\n' + '* ``DrawLabeling``: ' + Qgis.MapSettingsFlag.DrawLabeling.__doc__ + '\n' + '* ``UseRenderingOptimization``: ' + Qgis.MapSettingsFlag.UseRenderingOptimization.__doc__ + '\n' + '* ``DrawSelection``: ' + Qgis.MapSettingsFlag.DrawSelection.__doc__ + '\n' + '* ``DrawSymbolBounds``: ' + Qgis.MapSettingsFlag.DrawSymbolBounds.__doc__ + '\n' + '* ``RenderMapTile``: ' + Qgis.MapSettingsFlag.RenderMapTile.__doc__ + '\n' + '* ``RenderPartialOutput``: ' + Qgis.MapSettingsFlag.RenderPartialOutput.__doc__ + '\n' + '* ``RenderPreviewJob``: ' + Qgis.MapSettingsFlag.RenderPreviewJob.__doc__ + '\n' + '* ``RenderBlocking``: ' + Qgis.MapSettingsFlag.RenderBlocking.__doc__ + '\n' + '* ``LosslessImageRendering``: ' + Qgis.MapSettingsFlag.LosslessImageRendering.__doc__ + '\n' + '* ``Render3DMap``: ' + Qgis.MapSettingsFlag.Render3DMap.__doc__ + '\n' + '* ``HighQualityImageTransforms``: ' + Qgis.MapSettingsFlag.HighQualityImageTransforms.__doc__ + '\n' + '* ``SkipSymbolRendering``: ' + Qgis.MapSettingsFlag.SkipSymbolRendering.__doc__ + '\n' + '* ``ForceRasterMasks``: ' + Qgis.MapSettingsFlag.ForceRasterMasks.__doc__ + '\n' + '* ``RecordProfile``: ' + Qgis.MapSettingsFlag.RecordProfile.__doc__
+QgsMapSettings.AlwaysUseGlobalMasks = Qgis.MapSettingsFlag.AlwaysUseGlobalMasks
+QgsMapSettings.AlwaysUseGlobalMasks.is_monkey_patched = True
+QgsMapSettings.AlwaysUseGlobalMasks.__doc__ = "When applying clipping paths for selective masking, always use global (\"entire map\") paths, instead of calculating local clipping paths per rendered feature. This results in considerably more complex vector exports in all current Qt versions. This flag only applies to vector map exports. (Since QGIS 3.38)"
+Qgis.MapSettingsFlag.__doc__ = "Flags which adjust the way maps are rendered.\n\n.. versionadded:: 3.22\n\n" + '* ``Antialiasing``: ' + Qgis.MapSettingsFlag.Antialiasing.__doc__ + '\n' + '* ``DrawEditingInfo``: ' + Qgis.MapSettingsFlag.DrawEditingInfo.__doc__ + '\n' + '* ``ForceVectorOutput``: ' + Qgis.MapSettingsFlag.ForceVectorOutput.__doc__ + '\n' + '* ``UseAdvancedEffects``: ' + Qgis.MapSettingsFlag.UseAdvancedEffects.__doc__ + '\n' + '* ``DrawLabeling``: ' + Qgis.MapSettingsFlag.DrawLabeling.__doc__ + '\n' + '* ``UseRenderingOptimization``: ' + Qgis.MapSettingsFlag.UseRenderingOptimization.__doc__ + '\n' + '* ``DrawSelection``: ' + Qgis.MapSettingsFlag.DrawSelection.__doc__ + '\n' + '* ``DrawSymbolBounds``: ' + Qgis.MapSettingsFlag.DrawSymbolBounds.__doc__ + '\n' + '* ``RenderMapTile``: ' + Qgis.MapSettingsFlag.RenderMapTile.__doc__ + '\n' + '* ``RenderPartialOutput``: ' + Qgis.MapSettingsFlag.RenderPartialOutput.__doc__ + '\n' + '* ``RenderPreviewJob``: ' + Qgis.MapSettingsFlag.RenderPreviewJob.__doc__ + '\n' + '* ``RenderBlocking``: ' + Qgis.MapSettingsFlag.RenderBlocking.__doc__ + '\n' + '* ``LosslessImageRendering``: ' + Qgis.MapSettingsFlag.LosslessImageRendering.__doc__ + '\n' + '* ``Render3DMap``: ' + Qgis.MapSettingsFlag.Render3DMap.__doc__ + '\n' + '* ``HighQualityImageTransforms``: ' + Qgis.MapSettingsFlag.HighQualityImageTransforms.__doc__ + '\n' + '* ``SkipSymbolRendering``: ' + Qgis.MapSettingsFlag.SkipSymbolRendering.__doc__ + '\n' + '* ``ForceRasterMasks``: ' + Qgis.MapSettingsFlag.ForceRasterMasks.__doc__ + '\n' + '* ``RecordProfile``: ' + Qgis.MapSettingsFlag.RecordProfile.__doc__ + '\n' + '* ``AlwaysUseGlobalMasks``: ' + Qgis.MapSettingsFlag.AlwaysUseGlobalMasks.__doc__
 # --
 QgsMapSettings.Flags = Qgis.MapSettingsFlags
 Qgis.MapSettingsFlag.baseClass = Qgis
@@ -2327,7 +2344,10 @@ QgsRenderContext.SkipSymbolRendering.__doc__ = "Disable symbol rendering while s
 QgsRenderContext.RecordProfile = Qgis.RenderContextFlag.RecordProfile
 QgsRenderContext.RecordProfile.is_monkey_patched = True
 QgsRenderContext.RecordProfile.__doc__ = "Enable run-time profiling while rendering (since QGIS 3.34)"
-Qgis.RenderContextFlag.__doc__ = "Flags which affect rendering operations.\n\n.. versionadded:: 3.22\n\n" + '* ``DrawEditingInfo``: ' + Qgis.RenderContextFlag.DrawEditingInfo.__doc__ + '\n' + '* ``ForceVectorOutput``: ' + Qgis.RenderContextFlag.ForceVectorOutput.__doc__ + '\n' + '* ``UseAdvancedEffects``: ' + Qgis.RenderContextFlag.UseAdvancedEffects.__doc__ + '\n' + '* ``UseRenderingOptimization``: ' + Qgis.RenderContextFlag.UseRenderingOptimization.__doc__ + '\n' + '* ``DrawSelection``: ' + Qgis.RenderContextFlag.DrawSelection.__doc__ + '\n' + '* ``DrawSymbolBounds``: ' + Qgis.RenderContextFlag.DrawSymbolBounds.__doc__ + '\n' + '* ``RenderMapTile``: ' + Qgis.RenderContextFlag.RenderMapTile.__doc__ + '\n' + '* ``Antialiasing``: ' + Qgis.RenderContextFlag.Antialiasing.__doc__ + '\n' + '* ``RenderPartialOutput``: ' + Qgis.RenderContextFlag.RenderPartialOutput.__doc__ + '\n' + '* ``RenderPreviewJob``: ' + Qgis.RenderContextFlag.RenderPreviewJob.__doc__ + '\n' + '* ``RenderBlocking``: ' + Qgis.RenderContextFlag.RenderBlocking.__doc__ + '\n' + '* ``RenderSymbolPreview``: ' + Qgis.RenderContextFlag.RenderSymbolPreview.__doc__ + '\n' + '* ``LosslessImageRendering``: ' + Qgis.RenderContextFlag.LosslessImageRendering.__doc__ + '\n' + '* ``ApplyScalingWorkaroundForTextRendering``: ' + Qgis.RenderContextFlag.ApplyScalingWorkaroundForTextRendering.__doc__ + '\n' + '* ``Render3DMap``: ' + Qgis.RenderContextFlag.Render3DMap.__doc__ + '\n' + '* ``ApplyClipAfterReprojection``: ' + Qgis.RenderContextFlag.ApplyClipAfterReprojection.__doc__ + '\n' + '* ``RenderingSubSymbol``: ' + Qgis.RenderContextFlag.RenderingSubSymbol.__doc__ + '\n' + '* ``HighQualityImageTransforms``: ' + Qgis.RenderContextFlag.HighQualityImageTransforms.__doc__ + '\n' + '* ``SkipSymbolRendering``: ' + Qgis.RenderContextFlag.SkipSymbolRendering.__doc__ + '\n' + '* ``RecordProfile``: ' + Qgis.RenderContextFlag.RecordProfile.__doc__
+QgsRenderContext.AlwaysUseGlobalMasks = Qgis.RenderContextFlag.AlwaysUseGlobalMasks
+QgsRenderContext.AlwaysUseGlobalMasks.is_monkey_patched = True
+QgsRenderContext.AlwaysUseGlobalMasks.__doc__ = "When applying clipping paths for selective masking, always use global (\"entire map\") paths, instead of calculating local clipping paths per rendered feature. This results in considerably more complex vector exports in all current Qt versions. This flag only applies to vector map exports. (Since QGIS 3.38)"
+Qgis.RenderContextFlag.__doc__ = "Flags which affect rendering operations.\n\n.. versionadded:: 3.22\n\n" + '* ``DrawEditingInfo``: ' + Qgis.RenderContextFlag.DrawEditingInfo.__doc__ + '\n' + '* ``ForceVectorOutput``: ' + Qgis.RenderContextFlag.ForceVectorOutput.__doc__ + '\n' + '* ``UseAdvancedEffects``: ' + Qgis.RenderContextFlag.UseAdvancedEffects.__doc__ + '\n' + '* ``UseRenderingOptimization``: ' + Qgis.RenderContextFlag.UseRenderingOptimization.__doc__ + '\n' + '* ``DrawSelection``: ' + Qgis.RenderContextFlag.DrawSelection.__doc__ + '\n' + '* ``DrawSymbolBounds``: ' + Qgis.RenderContextFlag.DrawSymbolBounds.__doc__ + '\n' + '* ``RenderMapTile``: ' + Qgis.RenderContextFlag.RenderMapTile.__doc__ + '\n' + '* ``Antialiasing``: ' + Qgis.RenderContextFlag.Antialiasing.__doc__ + '\n' + '* ``RenderPartialOutput``: ' + Qgis.RenderContextFlag.RenderPartialOutput.__doc__ + '\n' + '* ``RenderPreviewJob``: ' + Qgis.RenderContextFlag.RenderPreviewJob.__doc__ + '\n' + '* ``RenderBlocking``: ' + Qgis.RenderContextFlag.RenderBlocking.__doc__ + '\n' + '* ``RenderSymbolPreview``: ' + Qgis.RenderContextFlag.RenderSymbolPreview.__doc__ + '\n' + '* ``LosslessImageRendering``: ' + Qgis.RenderContextFlag.LosslessImageRendering.__doc__ + '\n' + '* ``ApplyScalingWorkaroundForTextRendering``: ' + Qgis.RenderContextFlag.ApplyScalingWorkaroundForTextRendering.__doc__ + '\n' + '* ``Render3DMap``: ' + Qgis.RenderContextFlag.Render3DMap.__doc__ + '\n' + '* ``ApplyClipAfterReprojection``: ' + Qgis.RenderContextFlag.ApplyClipAfterReprojection.__doc__ + '\n' + '* ``RenderingSubSymbol``: ' + Qgis.RenderContextFlag.RenderingSubSymbol.__doc__ + '\n' + '* ``HighQualityImageTransforms``: ' + Qgis.RenderContextFlag.HighQualityImageTransforms.__doc__ + '\n' + '* ``SkipSymbolRendering``: ' + Qgis.RenderContextFlag.SkipSymbolRendering.__doc__ + '\n' + '* ``RecordProfile``: ' + Qgis.RenderContextFlag.RecordProfile.__doc__ + '\n' + '* ``AlwaysUseGlobalMasks``: ' + Qgis.RenderContextFlag.AlwaysUseGlobalMasks.__doc__
 # --
 QgsRenderContext.Flags = Qgis.RenderContextFlags
 Qgis.RenderContextFlag.baseClass = Qgis
@@ -2500,6 +2520,43 @@ Qgis.TextCharacterVerticalAlignment.SubScript.__doc__ = "Characters are placed b
 Qgis.TextCharacterVerticalAlignment.__doc__ = "Text vertical alignment for characters.\n\nThis enum controls vertical alignment of individual characters within a block\nof text.\n\n.. versionadded:: 3.30\n\n" + '* ``Normal``: ' + Qgis.TextCharacterVerticalAlignment.Normal.__doc__ + '\n' + '* ``SuperScript``: ' + Qgis.TextCharacterVerticalAlignment.SuperScript.__doc__ + '\n' + '* ``SubScript``: ' + Qgis.TextCharacterVerticalAlignment.SubScript.__doc__
 # --
 Qgis.TextCharacterVerticalAlignment.baseClass = Qgis
+QgsVectorSimplifyMethod.SimplifyAlgorithm = Qgis.VectorSimplificationAlgorithm
+# monkey patching scoped based enum
+QgsVectorSimplifyMethod.Distance = Qgis.VectorSimplificationAlgorithm.Distance
+QgsVectorSimplifyMethod.Distance.is_monkey_patched = True
+QgsVectorSimplifyMethod.Distance.__doc__ = "The simplification uses the distance between points to remove duplicate points"
+QgsVectorSimplifyMethod.SnapToGrid = Qgis.VectorSimplificationAlgorithm.SnapToGrid
+QgsVectorSimplifyMethod.SnapToGrid.is_monkey_patched = True
+QgsVectorSimplifyMethod.SnapToGrid.__doc__ = "The simplification uses a grid (similar to ST_SnapToGrid) to remove duplicate points"
+QgsVectorSimplifyMethod.Visvalingam = Qgis.VectorSimplificationAlgorithm.Visvalingam
+QgsVectorSimplifyMethod.Visvalingam.is_monkey_patched = True
+QgsVectorSimplifyMethod.Visvalingam.__doc__ = "The simplification gives each point in a line an importance weighting, so that least important points are removed first"
+QgsVectorSimplifyMethod.SnappedToGridGlobal = Qgis.VectorSimplificationAlgorithm.SnappedToGridGlobal
+QgsVectorSimplifyMethod.SnappedToGridGlobal.is_monkey_patched = True
+QgsVectorSimplifyMethod.SnappedToGridGlobal.__doc__ = "Snap to a global grid based on the tolerance. Good for consistent results for incoming vertices, regardless of their feature"
+Qgis.VectorSimplificationAlgorithm.__doc__ = "Simplification algorithms for vector features.\n\n.. note::\n\n   Prior to QGIS 3.38 this was available as :py:class:`QgsVectorSimplifyMethod`.SimplifyAlgorithm\n\n.. versionadded:: 3.38\n\n" + '* ``Distance``: ' + Qgis.VectorSimplificationAlgorithm.Distance.__doc__ + '\n' + '* ``SnapToGrid``: ' + Qgis.VectorSimplificationAlgorithm.SnapToGrid.__doc__ + '\n' + '* ``Visvalingam``: ' + Qgis.VectorSimplificationAlgorithm.Visvalingam.__doc__ + '\n' + '* ``SnappedToGridGlobal``: ' + Qgis.VectorSimplificationAlgorithm.SnappedToGridGlobal.__doc__
+# --
+Qgis.VectorSimplificationAlgorithm.baseClass = Qgis
+QgsVectorSimplifyMethod.SimplifyHint = Qgis.VectorRenderingSimplificationFlag
+# monkey patching scoped based enum
+QgsVectorSimplifyMethod.NoSimplification = Qgis.VectorRenderingSimplificationFlag.NoSimplification
+QgsVectorSimplifyMethod.NoSimplification.is_monkey_patched = True
+QgsVectorSimplifyMethod.NoSimplification.__doc__ = "No simplification can be applied"
+QgsVectorSimplifyMethod.GeometrySimplification = Qgis.VectorRenderingSimplificationFlag.GeometrySimplification
+QgsVectorSimplifyMethod.GeometrySimplification.is_monkey_patched = True
+QgsVectorSimplifyMethod.GeometrySimplification.__doc__ = "The geometries can be simplified using the current map2pixel context state"
+QgsVectorSimplifyMethod.AntialiasingSimplification = Qgis.VectorRenderingSimplificationFlag.AntialiasingSimplification
+QgsVectorSimplifyMethod.AntialiasingSimplification.is_monkey_patched = True
+QgsVectorSimplifyMethod.AntialiasingSimplification.__doc__ = "The geometries can be rendered with 'AntiAliasing' disabled because of it is '1-pixel size'"
+QgsVectorSimplifyMethod.FullSimplification = Qgis.VectorRenderingSimplificationFlag.FullSimplification
+QgsVectorSimplifyMethod.FullSimplification.is_monkey_patched = True
+QgsVectorSimplifyMethod.FullSimplification.__doc__ = "All simplification hints can be applied ( Geometry + AA-disabling )"
+Qgis.VectorRenderingSimplificationFlag.__doc__ = "Simplification flags for vector feature rendering.\n\n.. note::\n\n   Prior to QGIS 3.38 this was available as :py:class:`QgsVectorSimplifyMethod`.SimplifyHint\n\n.. versionadded:: 3.38\n\n" + '* ``NoSimplification``: ' + Qgis.VectorRenderingSimplificationFlag.NoSimplification.__doc__ + '\n' + '* ``GeometrySimplification``: ' + Qgis.VectorRenderingSimplificationFlag.GeometrySimplification.__doc__ + '\n' + '* ``AntialiasingSimplification``: ' + Qgis.VectorRenderingSimplificationFlag.AntialiasingSimplification.__doc__ + '\n' + '* ``FullSimplification``: ' + Qgis.VectorRenderingSimplificationFlag.FullSimplification.__doc__
+# --
+Qgis.VectorRenderingSimplificationFlag.baseClass = Qgis
+QgsVectorSimplifyMethod.SimplifyHints = Qgis.VectorRenderingSimplificationFlags
+Qgis.VectorRenderingSimplificationFlags.baseClass = Qgis
+VectorRenderingSimplificationFlags = Qgis  # dirty hack since SIP seems to introduce the flags in module
 # monkey patching scoped based enum
 Qgis.RenderSubcomponentProperty.Generic.__doc__ = "Generic subcomponent property"
 Qgis.RenderSubcomponentProperty.ShadowOffset.__doc__ = "Shadow offset"
@@ -3864,6 +3921,81 @@ QgsRaster.IdentifyFormatFeature.__doc__ = "WMS GML/JSON -> feature"
 Qgis.RasterIdentifyFormat.__doc__ = "Raster identify formats.\n\n.. note::\n\n   Prior to QGIS 3.30 this was available as :py:class:`QgsRaster`.IdentifyFormat\n\n.. versionadded:: 3.30\n\n" + '* ``IdentifyFormatUndefined``: ' + Qgis.RasterIdentifyFormat.Undefined.__doc__ + '\n' + '* ``IdentifyFormatValue``: ' + Qgis.RasterIdentifyFormat.Value.__doc__ + '\n' + '* ``IdentifyFormatText``: ' + Qgis.RasterIdentifyFormat.Text.__doc__ + '\n' + '* ``IdentifyFormatHtml``: ' + Qgis.RasterIdentifyFormat.Html.__doc__ + '\n' + '* ``IdentifyFormatFeature``: ' + Qgis.RasterIdentifyFormat.Feature.__doc__
 # --
 Qgis.RasterIdentifyFormat.baseClass = Qgis
+QgsRasterInterface.Capability = Qgis.RasterInterfaceCapability
+# monkey patching scoped based enum
+QgsRasterInterface.NoCapabilities = Qgis.RasterInterfaceCapability.NoCapabilities
+QgsRasterInterface.NoCapabilities.is_monkey_patched = True
+QgsRasterInterface.NoCapabilities.__doc__ = "No capabilities"
+QgsRasterInterface.Size = Qgis.RasterInterfaceCapability.Size
+QgsRasterInterface.Size.is_monkey_patched = True
+QgsRasterInterface.Size.__doc__ = "Original data source size (and thus resolution) is known, it is not always available, for example for WMS"
+QgsRasterInterface.Create = Qgis.RasterInterfaceCapability.Create
+QgsRasterInterface.Create.is_monkey_patched = True
+QgsRasterInterface.Create.__doc__ = "Create new datasets (Unused and deprecated -- will be removed in QGIS 4)"
+QgsRasterInterface.Remove = Qgis.RasterInterfaceCapability.Remove
+QgsRasterInterface.Remove.is_monkey_patched = True
+QgsRasterInterface.Remove.__doc__ = "Delete datasets (Unused and deprecated -- will be removed in QGIS 4)"
+QgsRasterInterface.BuildPyramids = Qgis.RasterInterfaceCapability.BuildPyramids
+QgsRasterInterface.BuildPyramids.is_monkey_patched = True
+QgsRasterInterface.BuildPyramids.__doc__ = "Supports building of pyramids (overviews) (Deprecated since QGIS 3.38 -- use RasterProviderCapability.BuildPyramids instead)"
+QgsRasterInterface.Identify = Qgis.RasterInterfaceCapability.Identify
+QgsRasterInterface.Identify.is_monkey_patched = True
+QgsRasterInterface.Identify.__doc__ = "At least one identify format supported"
+QgsRasterInterface.IdentifyValue = Qgis.RasterInterfaceCapability.IdentifyValue
+QgsRasterInterface.IdentifyValue.is_monkey_patched = True
+QgsRasterInterface.IdentifyValue.__doc__ = "Numerical values"
+QgsRasterInterface.IdentifyText = Qgis.RasterInterfaceCapability.IdentifyText
+QgsRasterInterface.IdentifyText.is_monkey_patched = True
+QgsRasterInterface.IdentifyText.__doc__ = "WMS text"
+QgsRasterInterface.IdentifyHtml = Qgis.RasterInterfaceCapability.IdentifyHtml
+QgsRasterInterface.IdentifyHtml.is_monkey_patched = True
+QgsRasterInterface.IdentifyHtml.__doc__ = "WMS HTML"
+QgsRasterInterface.IdentifyFeature = Qgis.RasterInterfaceCapability.IdentifyFeature
+QgsRasterInterface.IdentifyFeature.is_monkey_patched = True
+QgsRasterInterface.IdentifyFeature.__doc__ = "WMS GML -> feature"
+QgsRasterInterface.Prefetch = Qgis.RasterInterfaceCapability.Prefetch
+QgsRasterInterface.Prefetch.is_monkey_patched = True
+QgsRasterInterface.Prefetch.__doc__ = "Allow prefetching of out-of-view images"
+Qgis.RasterInterfaceCapability.__doc__ = "Raster interface capabilities.\n\n.. note::\n\n   Prior to QGIS 3.38 this was available as :py:class:`QgsRasterInterface`.Capability\n\n.. versionadded:: 3.38\n\n" + '* ``NoCapabilities``: ' + Qgis.RasterInterfaceCapability.NoCapabilities.__doc__ + '\n' + '* ``Size``: ' + Qgis.RasterInterfaceCapability.Size.__doc__ + '\n' + '* ``Create``: ' + Qgis.RasterInterfaceCapability.Create.__doc__ + '\n' + '* ``Remove``: ' + Qgis.RasterInterfaceCapability.Remove.__doc__ + '\n' + '* ``BuildPyramids``: ' + Qgis.RasterInterfaceCapability.BuildPyramids.__doc__ + '\n' + '* ``Identify``: ' + Qgis.RasterInterfaceCapability.Identify.__doc__ + '\n' + '* ``IdentifyValue``: ' + Qgis.RasterInterfaceCapability.IdentifyValue.__doc__ + '\n' + '* ``IdentifyText``: ' + Qgis.RasterInterfaceCapability.IdentifyText.__doc__ + '\n' + '* ``IdentifyHtml``: ' + Qgis.RasterInterfaceCapability.IdentifyHtml.__doc__ + '\n' + '* ``IdentifyFeature``: ' + Qgis.RasterInterfaceCapability.IdentifyFeature.__doc__ + '\n' + '* ``Prefetch``: ' + Qgis.RasterInterfaceCapability.Prefetch.__doc__
+# --
+Qgis.RasterInterfaceCapability.baseClass = Qgis
+Qgis.RasterInterfaceCapabilities.baseClass = Qgis
+RasterInterfaceCapabilities = Qgis  # dirty hack since SIP seems to introduce the flags in module
+QgsRasterDataProvider.ProviderCapability = Qgis.RasterProviderCapability
+# monkey patching scoped based enum
+QgsRasterDataProvider.NoProviderCapabilities = Qgis.RasterProviderCapability.NoProviderCapabilities
+QgsRasterDataProvider.NoProviderCapabilities.is_monkey_patched = True
+QgsRasterDataProvider.NoProviderCapabilities.__doc__ = "Provider has no capabilities"
+QgsRasterDataProvider.ReadLayerMetadata = Qgis.RasterProviderCapability.ReadLayerMetadata
+QgsRasterDataProvider.ReadLayerMetadata.is_monkey_patched = True
+QgsRasterDataProvider.ReadLayerMetadata.__doc__ = "Provider can read layer metadata from data store. Since QGIS 3.0. See QgsDataProvider.layerMetadata()"
+QgsRasterDataProvider.WriteLayerMetadata = Qgis.RasterProviderCapability.WriteLayerMetadata
+QgsRasterDataProvider.WriteLayerMetadata.is_monkey_patched = True
+QgsRasterDataProvider.WriteLayerMetadata.__doc__ = "Provider can write layer metadata to the data store. Since QGIS 3.0. See QgsDataProvider.writeLayerMetadata()"
+QgsRasterDataProvider.ProviderHintBenefitsFromResampling = Qgis.RasterProviderCapability.ProviderHintBenefitsFromResampling
+QgsRasterDataProvider.ProviderHintBenefitsFromResampling.is_monkey_patched = True
+QgsRasterDataProvider.ProviderHintBenefitsFromResampling.__doc__ = "Provider benefits from resampling and should apply user default resampling settings (since QGIS 3.10)"
+QgsRasterDataProvider.ProviderHintCanPerformProviderResampling = Qgis.RasterProviderCapability.ProviderHintCanPerformProviderResampling
+QgsRasterDataProvider.ProviderHintCanPerformProviderResampling.is_monkey_patched = True
+QgsRasterDataProvider.ProviderHintCanPerformProviderResampling.__doc__ = "Provider can perform resampling (to be opposed to post rendering resampling) (since QGIS 3.16)"
+QgsRasterDataProvider.ReloadData = Qgis.RasterProviderCapability.ReloadData
+QgsRasterDataProvider.ReloadData.is_monkey_patched = True
+QgsRasterDataProvider.ReloadData.__doc__ = "Is able to force reload data / clear local caches. Since QGIS 3.18, see QgsDataProvider.reloadProviderData()"
+QgsRasterDataProvider.DpiDependentData = Qgis.RasterProviderCapability.DpiDependentData
+QgsRasterDataProvider.DpiDependentData.is_monkey_patched = True
+QgsRasterDataProvider.DpiDependentData.__doc__ = ""
+QgsRasterDataProvider.NativeRasterAttributeTable = Qgis.RasterProviderCapability.NativeRasterAttributeTable
+QgsRasterDataProvider.NativeRasterAttributeTable.is_monkey_patched = True
+QgsRasterDataProvider.NativeRasterAttributeTable.__doc__ = "Indicates that the provider supports native raster attribute table (since QGIS 3.30)"
+QgsRasterDataProvider.BuildPyramids = Qgis.RasterProviderCapability.BuildPyramids
+QgsRasterDataProvider.BuildPyramids.is_monkey_patched = True
+QgsRasterDataProvider.BuildPyramids.__doc__ = "Supports building of pyramids (overviews) (since QGIS 3.38 -- this is a replacement for RasterInterfaceCapability.BuildPyramids)"
+Qgis.RasterProviderCapability.__doc__ = "Raster data provider capabilities.\n\n.. note::\n\n   Prior to QGIS 3.38 this was available as :py:class:`QgsRasterDataProvider`.ProviderCapability\n\n.. versionadded:: 3.38\n\n" + '* ``NoProviderCapabilities``: ' + Qgis.RasterProviderCapability.NoProviderCapabilities.__doc__ + '\n' + '* ``ReadLayerMetadata``: ' + Qgis.RasterProviderCapability.ReadLayerMetadata.__doc__ + '\n' + '* ``WriteLayerMetadata``: ' + Qgis.RasterProviderCapability.WriteLayerMetadata.__doc__ + '\n' + '* ``ProviderHintBenefitsFromResampling``: ' + Qgis.RasterProviderCapability.ProviderHintBenefitsFromResampling.__doc__ + '\n' + '* ``ProviderHintCanPerformProviderResampling``: ' + Qgis.RasterProviderCapability.ProviderHintCanPerformProviderResampling.__doc__ + '\n' + '* ``ReloadData``: ' + Qgis.RasterProviderCapability.ReloadData.__doc__ + '\n' + '* ``DpiDependentData``: ' + Qgis.RasterProviderCapability.DpiDependentData.__doc__ + '\n' + '* ``NativeRasterAttributeTable``: ' + Qgis.RasterProviderCapability.NativeRasterAttributeTable.__doc__ + '\n' + '* ``BuildPyramids``: ' + Qgis.RasterProviderCapability.BuildPyramids.__doc__
+# --
+Qgis.RasterProviderCapability.baseClass = Qgis
+QgsRasterDataProvider.ProviderCapabilities = Qgis.RasterProviderCapabilities
+Qgis.RasterProviderCapabilities.baseClass = Qgis
+RasterProviderCapabilities = Qgis  # dirty hack since SIP seems to introduce the flags in module
 # monkey patching scoped based enum
 Qgis.ElevationMapCombineMethod.HighestElevation.__doc__ = "Keep the highest elevation if it is not null"
 Qgis.ElevationMapCombineMethod.NewerElevation.__doc__ = "Keep the new elevation regardless of its value if it is not null"
@@ -4636,6 +4768,16 @@ Qgis.GdalResampleAlgorithm.__doc__ = "Resampling algorithm to be used (equivalen
 # --
 Qgis.GdalResampleAlgorithm.baseClass = Qgis
 # monkey patching scoped based enum
+Qgis.VsiHandlerType.Invalid.__doc__ = "Invalid type, i.e. not a valid VSI handler"
+Qgis.VsiHandlerType.Archive.__doc__ = "File archive type (e.g. vsizip)"
+Qgis.VsiHandlerType.Network.__doc__ = "Generic network types (e.g. vsicurl)"
+Qgis.VsiHandlerType.Cloud.__doc__ = "Specific cloud provider types (e.g. vsis3)"
+Qgis.VsiHandlerType.Memory.__doc__ = "In-memory types (e.g. vsimem)"
+Qgis.VsiHandlerType.Other.__doc__ = "All other types"
+Qgis.VsiHandlerType.__doc__ = "GDAL VSI handler types.\n\n.. versionadded:: 3.40\n\n" + '* ``Invalid``: ' + Qgis.VsiHandlerType.Invalid.__doc__ + '\n' + '* ``Archive``: ' + Qgis.VsiHandlerType.Archive.__doc__ + '\n' + '* ``Network``: ' + Qgis.VsiHandlerType.Network.__doc__ + '\n' + '* ``Cloud``: ' + Qgis.VsiHandlerType.Cloud.__doc__ + '\n' + '* ``Memory``: ' + Qgis.VsiHandlerType.Memory.__doc__ + '\n' + '* ``Other``: ' + Qgis.VsiHandlerType.Other.__doc__
+# --
+Qgis.VsiHandlerType.baseClass = Qgis
+# monkey patching scoped based enum
 Qgis.ZonalStatistic.Count.__doc__ = "Pixel count"
 Qgis.ZonalStatistic.Sum.__doc__ = "Sum of pixel values"
 Qgis.ZonalStatistic.Mean.__doc__ = "Mean of pixel values"
@@ -4943,9 +5085,11 @@ Qgis.Statistic.__or__ = lambda flag1, flag2: Qgis.Statistics(_force_int(flag1) |
 Qgis.DateTimeStatistic.__or__ = lambda flag1, flag2: Qgis.DateTimeStatistics(_force_int(flag1) | _force_int(flag2))
 Qgis.StringStatistic.__or__ = lambda flag1, flag2: Qgis.StringStatistics(_force_int(flag1) | _force_int(flag2))
 Qgis.RasterBandStatistic.__or__ = lambda flag1, flag2: Qgis.RasterBandStatistics(_force_int(flag1) | _force_int(flag2))
+Qgis.RasterProviderCapability.__or__ = lambda flag1, flag2: Qgis.RasterProviderCapabilities(_force_int(flag1) | _force_int(flag2))
 Qgis.ProcessingProviderFlag.__or__ = lambda flag1, flag2: Qgis.ProcessingProviderFlags(_force_int(flag1) | _force_int(flag2))
 Qgis.ProcessingAlgorithmFlag.__or__ = lambda flag1, flag2: Qgis.ProcessingAlgorithmFlags(_force_int(flag1) | _force_int(flag2))
 Qgis.ProcessingFeatureSourceFlag.__or__ = lambda flag1, flag2: Qgis.ProcessingFeatureSourceFlags(_force_int(flag1) | _force_int(flag2))
 Qgis.ProcessingParameterTypeFlag.__or__ = lambda flag1, flag2: Qgis.ProcessingParameterTypeFlags(_force_int(flag1) | _force_int(flag2))
 Qgis.ProcessingParameterFlag.__or__ = lambda flag1, flag2: Qgis.ProcessingParameterFlags(_force_int(flag1) | _force_int(flag2))
 Qgis.DataItemProviderCapability.__or__ = lambda flag1, flag2: Qgis.DataItemProviderCapabilities(_force_int(flag1) | _force_int(flag2))
+Qgis.VectorRenderingSimplificationFlag.__or__ = lambda flag1, flag2: Qgis.VectorRenderingSimplificationFlags(_force_int(flag1) | _force_int(flag2))

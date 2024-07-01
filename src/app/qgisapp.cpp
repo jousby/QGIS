@@ -112,6 +112,7 @@
 #include "options/qgsfontoptions.h"
 #include "options/qgsgpsdeviceoptions.h"
 #include "options/qgsgpsoptions.h"
+#include "options/qgsideoptions.h"
 #include "options/qgscustomprojectionoptions.h"
 #include "options/qgsrasterrenderingoptions.h"
 #include "options/qgsrenderingoptions.h"
@@ -1959,6 +1960,7 @@ QgisApp::QgisApp( QSplashScreen *splash, bool restorePlugins, bool skipBadLayers
     mCentralContainer->setCurrentIndex( 0 );
   } );
 
+  mOptionWidgetFactories.emplace_back( QgsScopedOptionsWidgetFactory( std::make_unique< QgsIdeOptionsFactory >() ) );
   mOptionWidgetFactories.emplace_back( QgsScopedOptionsWidgetFactory( std::make_unique< QgsCodeEditorOptionsFactory >() ) );
   mOptionWidgetFactories.emplace_back( QgsScopedOptionsWidgetFactory( std::make_unique< QgsRenderingOptionsFactory >() ) );
   mOptionWidgetFactories.emplace_back( QgsScopedOptionsWidgetFactory( std::make_unique< QgsVectorRenderingOptionsFactory >() ) );
@@ -5509,198 +5511,178 @@ void QgisApp::about()
   if ( !sAbt )
   {
     sAbt = new QgsAbout( this );
-    QString versionString = QStringLiteral( "<html><body><div align='center'><table width='100%'>" );
-
-    versionString += QStringLiteral( "<tr><td>%1</td><td>%2</td><td>" ).arg( tr( "QGIS version" ), Qgis::version() );
-
-    if ( QString( Qgis::devVersion() ) == QLatin1String( "exported" ) )
-    {
-      versionString += tr( "QGIS code branch" );
-      if ( Qgis::version().endsWith( QLatin1String( "Master" ) ) )
-      {
-        versionString += QLatin1String( "</td><td><a href=\"https://github.com/qgis/QGIS/tree/master\">master</a></td>" );
-      }
-      else
-      {
-        versionString += QStringLiteral( "</td><td><a href=\"https://github.com/qgis/QGIS/tree/release-%1_%2\">Release %1.%2</a></td>" )
-                         .arg( Qgis::versionInt() / 10000 ).arg( Qgis::versionInt() / 100 % 100 );
-      }
-    }
-    else
-    {
-      versionString += QStringLiteral( "%1</td><td><a href=\"https://github.com/qgis/QGIS/commit/%2\">%2</a></td>" ).arg( tr( "QGIS code revision" ), Qgis::devVersion() );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // Qt version
-    const QString qtVersionCompiled{ QT_VERSION_STR };
-    const QString qtVersionRunning{ qVersion() };
-    if ( qtVersionCompiled != qtVersionRunning )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against Qt" ), qtVersionCompiled );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against Qt" ), qtVersionRunning );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "Qt version" ), qtVersionCompiled );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // Python version
-    QString pythonVersion;
-    QgsPythonRunner::run( QStringLiteral( "import platform" ) );
-    QgsPythonRunner::eval( QStringLiteral( "platform.python_version()" ), pythonVersion );
-    if ( pythonVersion != PYTHON_VERSION )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against Python" ), PYTHON_VERSION );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against Python" ), pythonVersion );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "Python version" ), PYTHON_VERSION );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // GDAL version
-    const QString gdalVersionCompiled { GDAL_RELEASE_NAME };
-    const QString gdalVersionRunning { GDALVersionInfo( "RELEASE_NAME" ) };
-    if ( gdalVersionCompiled != gdalVersionRunning )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against GDAL/OGR" ), gdalVersionCompiled );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against GDAL/OGR" ), gdalVersionRunning );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "GDAL/OGR version" ), gdalVersionCompiled );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // proj
-    PJ_INFO info = proj_info();
-    const QString projVersionCompiled { QStringLiteral( "%1.%2.%3" ).arg( PROJ_VERSION_MAJOR ).arg( PROJ_VERSION_MINOR ).arg( PROJ_VERSION_PATCH ) };
-    const QString projVersionRunning { info.version };
-    if ( projVersionCompiled != projVersionRunning )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against PROJ" ), projVersionCompiled );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against PROJ" ), projVersionRunning );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "PROJ version" ), projVersionCompiled );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // CRS database versions
-    versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2 (%3)</td>" ).arg( tr( "EPSG Registry database version" ), QgsProjUtils::epsgRegistryVersion(), QgsProjUtils::epsgRegistryDate().toString( Qt::ISODate ) );
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // GEOS version
-    const QString geosVersionCompiled { GEOS_CAPI_VERSION };
-    const QString geosVersionRunning { GEOSversion() };
-    if ( geosVersionCompiled != geosVersionRunning )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against GEOS" ), geosVersionCompiled );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against GEOS" ), geosVersionRunning );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "GEOS version" ), geosVersionCompiled );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // SQLite version
-    const QString sqliteVersionCompiled { SQLITE_VERSION };
-    const QString sqliteVersionRunning { sqlite3_libversion() };
-    if ( sqliteVersionCompiled != sqliteVersionRunning )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against SQLite" ), sqliteVersionCompiled );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against SQLite" ), sqliteVersionRunning );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "SQLite version" ), sqliteVersionCompiled );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // PDAL
-#ifdef HAVE_PDAL_QGIS
-    const QString pdalVersionCompiled { PDAL_VERSION };
-#if PDAL_VERSION_MAJOR_INT > 1 || (PDAL_VERSION_MAJOR_INT == 1 && PDAL_VERSION_MINOR_INT >= 7)
-    const QString pdalVersionRunningRaw { QString::fromStdString( pdal::Config::fullVersionString() ) };
-#else
-    const QString pdalVersionRunningRaw { QString::fromStdString( pdal::GetFullVersionString() ) };
-#endif
-    const thread_local QRegularExpression pdalVersionRx { QStringLiteral( "(\\d+\\.\\d+\\.\\d+)" )};
-    const QRegularExpressionMatch pdalVersionMatch{ pdalVersionRx.match( pdalVersionRunningRaw ) };
-    const QString pdalVersionRunning{ pdalVersionMatch.hasMatch() ? pdalVersionMatch.captured( 1 ) : pdalVersionRunningRaw };
-    if ( pdalVersionCompiled != pdalVersionRunning )
-    {
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Compiled against PDAL" ), pdalVersionCompiled );
-      versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "Running against PDAL" ), pdalVersionRunning );
-    }
-    else
-    {
-      versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "PDAL version" ), pdalVersionCompiled );
-    }
-    versionString += QLatin1String( "</tr><tr>" );
-#endif
-
-    // postgres
-    versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">" ).arg( tr( "PostgreSQL client version" ) );
-#ifdef HAVE_POSTGRESQL
-    versionString += QStringLiteral( PG_VERSION );
-#else
-    versionString += tr( "No support" );
-#endif
-    versionString += QLatin1String( "</td></tr><tr>" );
-
-    // spatialite
-    versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">" ).arg( tr( "SpatiaLite version" ) );
-#ifdef HAVE_SPATIALITE
-    versionString += QStringLiteral( "%1</td>" ).arg( spatialite_version() );
-#else
-    versionString += tr( "No support" );
-#endif
-    versionString += QLatin1String( "</td></tr><tr>" );
-
-    // QWT
-    versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "QWT version" ), QWT_VERSION_STR );
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // QScintilla
-    versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "QScintilla2 version" ), QSCINTILLA_VERSION_STR );
-    versionString += QLatin1String( "</tr><tr>" );
-
-    // Operating system
-    versionString += QStringLiteral( "<td>%1</td><td colspan=\"3\">%2</td>" ).arg( tr( "OS version" ), QSysInfo::prettyProductName() );
-    versionString += QLatin1String( "</tr><tr>" );
-
-#ifdef QGISDEBUG
-    versionString += QLatin1String( "</tr><tr>" );
-    versionString += QStringLiteral( "<td colspan=\"4\"><i>%1</i></td>" ).arg( tr( "This copy of QGIS writes debugging output." ) );
-    versionString += QLatin1String( "</tr><tr>" );
-#endif
-
-#ifdef WITH_BINDINGS
-    if ( mPythonUtils && mPythonUtils->isEnabled() )
-    {
-      versionString += QStringLiteral( "</tr><tr><td colspan=\"4\">%1</td>" ).arg( tr( "Active Python plugins" ) );
-      const QStringList activePlugins = mPythonUtils->listActivePlugins();
-      for ( const QString &plugin : activePlugins )
-      {
-        const QString version = mPythonUtils->getPluginMetadata( plugin, QStringLiteral( "version" ) );
-        versionString += QStringLiteral( "</tr><tr><td>%1</td><td colspan=\"3\">%2</td>" ).arg( plugin, version );
-      }
-    }
-#endif
-
-    versionString += QLatin1String( "</tr></table></div></body></html>" );
-
-    sAbt->setVersion( versionString );
+    sAbt->setVersion( QgisApp::getVersionString() );
   }
   sAbt->show();
   sAbt->raise();
   sAbt->activateWindow();
+}
+
+QString QgisApp::getVersionString()
+{
+  QString versionString = QStringLiteral( "<table width='100%' align='center'>" );
+
+  const QString compLabel = tr( "Compiled" );
+  const QString runLabel = tr( "Running" );
+
+  versionString += QStringLiteral( "<tr><td colspan=\"2\"><b>%1</b></td>" ).arg( tr( "Libraries" ) );
+  versionString += QStringLiteral( "<tr><td>%1</td><td>%2</td>" ).arg( tr( "QGIS version" ), Qgis::version() );
+
+  if ( QString( Qgis::devVersion() ) == QLatin1String( "exported" ) )
+  {
+    versionString += tr( "QGIS code branch" );
+    if ( Qgis::version().endsWith( QLatin1String( "Master" ) ) )
+    {
+      versionString += QLatin1String( "<td><a href=\"https://github.com/qgis/QGIS/tree/master\">master</a></td>" );
+    }
+    else
+    {
+      versionString += QStringLiteral( "<td><a href=\"https://github.com/qgis/QGIS/tree/release-%1_%2\">Release %1.%2</a></td>" )
+                       .arg( Qgis::versionInt() / 10000 ).arg( Qgis::versionInt() / 100 % 100 );
+    }
+  }
+  else
+  {
+    versionString += QLatin1String( "</tr><tr>" );
+    versionString += QStringLiteral( "<td>%1</td><td><a href=\"https://github.com/qgis/QGIS/commit/%2\">%2</a></td>" ).arg( tr( "QGIS code revision" ), Qgis::devVersion() );
+  }
+  versionString += QLatin1String( "</tr><tr>" );
+
+  // Qt version
+  const QString qtVersionCompiled{ QT_VERSION_STR };
+  const QString qtVersionRunning{ qVersion() };
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "Qt version" ), qtVersionCompiled );
+  if ( qtVersionCompiled != qtVersionRunning )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, qtVersionRunning, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // Python version
+  QString pythonVersion;
+  QgsPythonRunner::run( QStringLiteral( "import platform" ) );
+  QgsPythonRunner::eval( QStringLiteral( "platform.python_version()" ), pythonVersion );
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "Python version" ), PYTHON_VERSION );
+  if ( pythonVersion != PYTHON_VERSION )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, pythonVersion, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // GDAL version
+  const QString gdalVersionCompiled { GDAL_RELEASE_NAME };
+  const QString gdalVersionRunning { GDALVersionInfo( "RELEASE_NAME" ) };
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "GDAL/OGR version" ), gdalVersionCompiled );
+  if ( gdalVersionCompiled != gdalVersionRunning )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, gdalVersionRunning, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // proj
+  PJ_INFO info = proj_info();
+  const QString projVersionCompiled { QStringLiteral( "%1.%2.%3" ).arg( PROJ_VERSION_MAJOR ).arg( PROJ_VERSION_MINOR ).arg( PROJ_VERSION_PATCH ) };
+  const QString projVersionRunning { info.version };
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "PROJ version" ), projVersionCompiled );
+  if ( projVersionCompiled != projVersionRunning )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, projVersionRunning, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // CRS database versions
+  versionString += QStringLiteral( "<td>%1</td><td>%2 (%3)</td>" ).arg( tr( "EPSG Registry database version" ), QgsProjUtils::epsgRegistryVersion(), QgsProjUtils::epsgRegistryDate().toString( Qt::ISODate ) );
+  versionString += QLatin1String( "</tr><tr>" );
+
+  // GEOS version
+  const QString geosVersionCompiled { GEOS_CAPI_VERSION };
+  const QString geosVersionRunning { GEOSversion() };
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "GEOS version" ), geosVersionCompiled );
+  if ( geosVersionCompiled != geosVersionRunning )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, geosVersionRunning, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // SQLite version
+  const QString sqliteVersionCompiled { SQLITE_VERSION };
+  const QString sqliteVersionRunning { sqlite3_libversion() };
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "SQLite version" ), sqliteVersionCompiled );
+  if ( sqliteVersionCompiled != sqliteVersionRunning )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, sqliteVersionRunning, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // PDAL
+#ifdef HAVE_PDAL_QGIS
+  const QString pdalVersionCompiled { PDAL_VERSION };
+#if PDAL_VERSION_MAJOR_INT > 1 || (PDAL_VERSION_MAJOR_INT == 1 && PDAL_VERSION_MINOR_INT >= 7)
+  const QString pdalVersionRunningRaw { QString::fromStdString( pdal::Config::fullVersionString() ) };
+#else
+  const QString pdalVersionRunningRaw { QString::fromStdString( pdal::GetFullVersionString() ) };
+#endif
+  const thread_local QRegularExpression pdalVersionRx { QStringLiteral( "(\\d+\\.\\d+\\.\\d+)" )};
+  const QRegularExpressionMatch pdalVersionMatch{ pdalVersionRx.match( pdalVersionRunningRaw ) };
+  const QString pdalVersionRunning{ pdalVersionMatch.hasMatch() ? pdalVersionMatch.captured( 1 ) : pdalVersionRunningRaw };
+  versionString += QStringLiteral( "<td>%1</td><td>%2" ).arg( tr( "PDAL version" ), pdalVersionCompiled );
+  if ( pdalVersionCompiled != pdalVersionRunning )
+  {
+    versionString += QStringLiteral( " (%1)<br/>%2 (%3)" ).arg( compLabel, pdalVersionRunning, runLabel );
+  }
+  versionString += QLatin1String( "</td></tr><tr>" );
+#endif
+
+  // postgres
+  versionString += QStringLiteral( "<td>%1</td><td>" ).arg( tr( "PostgreSQL client version" ) );
+#ifdef HAVE_POSTGRESQL
+  versionString += QStringLiteral( PG_VERSION );
+#else
+  versionString += tr( "No support" );
+#endif
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // spatialite
+  versionString += QStringLiteral( "<td>%1</td><td>" ).arg( tr( "SpatiaLite version" ) );
+#ifdef HAVE_SPATIALITE
+  versionString += QStringLiteral( "%1</td>" ).arg( spatialite_version() );
+#else
+  versionString += tr( "No support" );
+#endif
+  versionString += QLatin1String( "</td></tr><tr>" );
+
+  // QWT
+  versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "QWT version" ), QWT_VERSION_STR );
+  versionString += QLatin1String( "</tr><tr>" );
+
+  // QScintilla
+  versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "QScintilla2 version" ), QSCINTILLA_VERSION_STR );
+  versionString += QLatin1String( "</tr><tr>" );
+
+  // Operating system
+  versionString += QStringLiteral( "<td>%1</td><td>%2</td>" ).arg( tr( "OS version" ), QSysInfo::prettyProductName() );
+  versionString += QLatin1String( "</tr><tr>" );
+
+#ifdef QGISDEBUG
+  versionString += QStringLiteral( "<td colspan=\"2\"><i>%1</i></td>" ).arg( tr( "This copy of QGIS writes debugging output." ) );
+  versionString += QLatin1String( "</tr><tr>" );
+#endif
+
+#ifdef WITH_BINDINGS
+  if ( mPythonUtils && mPythonUtils->isEnabled() )
+  {
+    versionString += QStringLiteral( "<td colspan=\"2\">&nbsp;</td></tr><tr><td colspan=\"2\"><b>%1</b></td>" ).arg( tr( "Active Python plugins" ) );
+    const QStringList activePlugins = mPythonUtils->listActivePlugins();
+    for ( const QString &plugin : activePlugins )
+    {
+      const QString version = mPythonUtils->getPluginMetadata( plugin, QStringLiteral( "version" ) );
+      versionString += QStringLiteral( "</tr><tr><td>%1</td><td>%2</td>" ).arg( plugin, version );
+    }
+  }
+#endif
+
+  versionString += QLatin1String( "</tr></table>" );
+  return versionString;
 }
 
 QString QgisApp::crsAndFormatAdjustedLayerUri( const QString &uri, const QStringList &supportedCrs, const QStringList &supportedFormats ) const
@@ -8084,7 +8066,7 @@ void QgisApp::diagramProperties()
   layout->addWidget( gui );
 
   QDialogButtonBox *buttonBox = new QDialogButtonBox(
-    QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply,
+    QDialogButtonBox::Help | QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply,
     Qt::Horizontal, &dlg );
   layout->addWidget( buttonBox );
 
@@ -8096,6 +8078,10 @@ void QgisApp::diagramProperties()
            &dlg, &QDialog::reject );
   connect( buttonBox->button( QDialogButtonBox::Apply ), &QAbstractButton::clicked,
            gui, &QgsDiagramProperties::apply );
+  connect( buttonBox->button( QDialogButtonBox::Help ), &QAbstractButton::clicked, gui, [ = ]
+  {
+    QgsHelp::openHelp( QStringLiteral( "working_with_vector/vector_properties.html#diagrams-properties" ) );
+  } );
 
   if ( dlg.exec() )
     gui->apply();
@@ -10372,7 +10358,8 @@ void QgisApp::pasteFromClipboard( QgsMapLayer *destinationLayer )
       }
 
       QgsAttributeMap attrMap;
-      for ( int i = 0; i < feature.attributes().count(); i++ )
+      const int attributeCount = feature.attributeCount();
+      for ( int i = 0; i < attributeCount; i++ )
       {
         attrMap[i] = feature.attribute( i );
       }
@@ -13080,6 +13067,24 @@ void QgisApp::unregisterMapLayerPropertiesFactory( QgsMapLayerConfigWidgetFactor
 
 void QgisApp::registerOptionsWidgetFactory( QgsOptionsWidgetFactory *factory )
 {
+  // make sure factories are inserted before others which create child pages for them
+  for ( auto it = mOptionsWidgetFactories.begin(); it != mOptionsWidgetFactories.end(); ++it )
+  {
+    const QgsOptionsWidgetFactory *other = ( *it ).data();
+    if ( !other )
+      continue;
+
+    const QStringList otherPath = other->path();
+    if ( otherPath.empty() )
+      continue;
+
+    if ( otherPath.at( 0 ) == factory->key() )
+    {
+      mOptionsWidgetFactories.insert( it, factory );
+      return;
+    }
+  }
+
   mOptionsWidgetFactories << factory;
 }
 
@@ -15305,7 +15310,7 @@ void QgisApp::activateDeactivateLayerRelatedActions( QgsMapLayer *layer )
       mActionOpenTable->setEnabled( true );
       mMenuFilterTable->setEnabled( true );
       mActionOpenTableSelected->setEnabled( true );
-      mActionOpenTableVisible->setEnabled( true );
+      mActionOpenTableVisible->setEnabled( isSpatial );
       mActionOpenTableEdited->setEnabled( true );
       mActionSelectAll->setEnabled( true );
       mActionReselect->setEnabled( true );
@@ -15492,7 +15497,7 @@ void QgisApp::activateDeactivateLayerRelatedActions( QgsMapLayer *layer )
            && dprovider->dataType( 1 ) != Qgis::DataType::ARGB32
            && dprovider->dataType( 1 ) != Qgis::DataType::ARGB32_Premultiplied )
       {
-        if ( dprovider->capabilities() & QgsRasterDataProvider::Size )
+        if ( dprovider->capabilities() & Qgis::RasterInterfaceCapability::Size )
         {
           mActionFullHistogramStretch->setEnabled( true );
         }
@@ -15590,7 +15595,7 @@ void QgisApp::activateDeactivateLayerRelatedActions( QgsMapLayer *layer )
         if ( dprovider )
         {
           // does provider allow the identify map tool?
-          if ( dprovider->capabilities() & QgsRasterDataProvider::Identify )
+          if ( dprovider->capabilities() & Qgis::RasterInterfaceCapability::Identify )
           {
             mActionIdentify->setEnabled( true );
           }

@@ -64,7 +64,7 @@ class QgsFrameGraph : public Qt3DCore::QEntity
 
   public:
     //! Constructor
-      QgsFrameGraph( QSurface *surface, QSize s, Qt3DRender::QCamera *mainCamera, Qt3DCore::QEntity *root );
+    QgsFrameGraph( QSurface *surface, QSize s, Qt3DRender::QCamera *mainCamera, Qt3DCore::QEntity *root );
 
     //! Returns the root of the frame graph object
     Qt3DRender::QFrameGraphNode *frameGraphRoot() { return mRenderSurfaceSelector; }
@@ -75,12 +75,6 @@ class QgsFrameGraph : public Qt3DCore::QEntity
     Qt3DRender::QTexture2D *forwardRenderDepthTexture() { return mForwardDepthTexture; }
     //! Returns the shadow map (a depth texture for the shadow rendering pass)
     Qt3DRender::QTexture2D *shadowMapTexture() { return mShadowMapTexture; }
-
-    /**
-     * Returns ambient occlusion factor values texture
-     * \since QGIS 3.28
-     */
-    Qt3DRender::QTexture2D *ambientOcclusionFactorMap() { return mAmbientOcclusionRenderTexture; }
 
     /**
      * Returns blurred ambient occlusion factor values texture

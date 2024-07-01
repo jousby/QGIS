@@ -20,12 +20,23 @@
 #include "qgsguiutils.h"
 #include "qgsmessagebar.h"
 #include "qgsdecoratedscrollbar.h"
+#include "qgscodeeditorpython.h"
+#include "qgsnetworkaccessmanager.h"
+#include "qgssetrequestinitiator_p.h"
+#include "qgsjsonutils.h"
+#include "nlohmann/json.hpp"
+#include "qgssettings.h"
 
 #include <QVBoxLayout>
 #include <QToolButton>
 #include <QCheckBox>
 #include <QShortcut>
 #include <QGridLayout>
+#include <QDesktopServices>
+#include <QProcess>
+#include <QFileInfo>
+#include <QDir>
+#include <QNetworkRequest>
 
 QgsCodeEditorWidget::QgsCodeEditorWidget(
   QgsCodeEditor *editor,
@@ -36,6 +47,9 @@ QgsCodeEditorWidget::QgsCodeEditorWidget(
   , mMessageBar( messageBar )
 {
   Q_ASSERT( mEditor );
+
+  mEditor->installEventFilter( this );
+  installEventFilter( this );
 
   QVBoxLayout *vl = new QVBoxLayout();
   vl->setContentsMargins( 0, 0, 0, 0 );
@@ -237,6 +251,51 @@ void QgsCodeEditorWidget::showEvent( QShowEvent *event )
   updateHighlightController();
 }
 
+bool QgsCodeEditorWidget::eventFilter( QObject *obj, QEvent *event )
+{
+  if ( event->type() == QEvent::FocusIn )
+  {
+    if ( !mFilePath.isEmpty() )
+    {
+      if ( !QFile::exists( mFilePath ) )
+      {
+        // file deleted externally
+        if ( mMessageBar )
+        {
+          mMessageBar->pushCritical( QString(), tr( "The file <b>\"%1\"</b> has been deleted or is not accessible" ).arg( QDir::toNativeSeparators( mFilePath ) ) );
+        }
+      }
+      else
+      {
+        const QFileInfo fi( mFilePath );
+        if ( mLastModified != fi.lastModified() )
+        {
+          // TODO - we should give users a choice of how to react to this, eg "ignore changes"
+          // note -- we intentionally don't call loadFile here -- we want this action to be undo-able
+          QFile file( mFilePath );
+          if ( file.open( QFile::ReadOnly ) )
+          {
+            const QString content = file.readAll();
+
+            // don't clear, instead perform undoable actions:
+            mEditor->beginUndoAction();
+            mEditor->selectAll();
+            mEditor->removeSelectedText();
+            mEditor->insert( content );
+            mEditor->setModified( false );
+            mEditor->recolor();
+            mEditor->endUndoAction();
+
+            mLastModified = fi.lastModified();
+            emit loadedExternalChanges();
+          }
+        }
+      }
+    }
+  }
+  return QgsPanelWidget::eventFilter( obj, event );
+}
+
 QgsCodeEditorWidget::~QgsCodeEditorWidget() = default;
 
 bool QgsCodeEditorWidget::isSearchBarVisible() const
@@ -335,6 +394,200 @@ void QgsCodeEditorWidget::triggerFind()
   }
   mLineEditFind->selectAll();
   showSearchBar();
+}
+
+bool QgsCodeEditorWidget::loadFile( const QString &path )
+{
+  if ( !QFile::exists( path ) )
+    return false;
+
+  QFile file( path );
+  if ( file.open( QFile::ReadOnly ) )
+  {
+    const QString content = file.readAll();
+    mEditor->setText( content );
+    mEditor->setModified( false );
+    mEditor->recolor();
+    mLastModified = QFileInfo( path ).lastModified();
+    setFilePath( path );
+    return true;
+  }
+  return false;
+}
+
+void QgsCodeEditorWidget::setFilePath( const QString &path )
+{
+  if ( mFilePath == path )
+    return;
+
+  mFilePath = path;
+  emit filePathChanged( mFilePath );
+}
+
+bool QgsCodeEditorWidget::openInExternalEditor( int line, int column )
+{
+  if ( mFilePath.isEmpty() )
+    return false;
+
+  const QDir dir = QFileInfo( mFilePath ).dir();
+
+  bool useFallback = true;
+
+  QString externalEditorCommand;
+  switch ( mEditor->language() )
+  {
+    case Qgis::ScriptLanguage::Python:
+      externalEditorCommand = QgsCodeEditorPython::settingExternalPythonEditorCommand->value();
+      break;
+
+    case Qgis::ScriptLanguage::Css:
+    case Qgis::ScriptLanguage::QgisExpression:
+    case Qgis::ScriptLanguage::Html:
+    case Qgis::ScriptLanguage::JavaScript:
+    case Qgis::ScriptLanguage::Json:
+    case Qgis::ScriptLanguage::R:
+    case Qgis::ScriptLanguage::Sql:
+    case Qgis::ScriptLanguage::Batch:
+    case Qgis::ScriptLanguage::Bash:
+    case Qgis::ScriptLanguage::Unknown:
+      break;
+  }
+
+  int currentLine, currentColumn;
+  mEditor->getCursorPosition( &currentLine, &currentColumn );
+  if ( line < 0 )
+    line = currentLine;
+  if ( column < 0 )
+    column = currentColumn;
+
+  if ( !externalEditorCommand.isEmpty() )
+  {
+    externalEditorCommand = externalEditorCommand.replace( QStringLiteral( "<file>" ), mFilePath );
+    externalEditorCommand = externalEditorCommand.replace( QStringLiteral( "<line>" ), QString::number( line + 1 ) );
+    externalEditorCommand = externalEditorCommand.replace( QStringLiteral( "<col>" ), QString::number( column + 1 ) );
+
+    const QStringList commandParts = QProcess::splitCommand( externalEditorCommand );
+    if ( QProcess::startDetached( commandParts.at( 0 ), commandParts.mid( 1 ), dir.absolutePath() ) )
+    {
+      return true;
+    }
+  }
+
+  const QString editorCommand = qgetenv( "EDITOR" );
+  if ( !editorCommand.isEmpty() )
+  {
+    const QFileInfo fi( editorCommand );
+    if ( fi.exists( ) )
+    {
+      const QString command = fi.fileName();
+      const bool isTerminalEditor = command.compare( QLatin1String( "nano" ), Qt::CaseInsensitive ) == 0
+                                    || command.contains( QLatin1String( "vim" ), Qt::CaseInsensitive );
+
+      if ( !isTerminalEditor && QProcess::startDetached( editorCommand, {mFilePath}, dir.absolutePath() ) )
+      {
+        useFallback = false;
+      }
+    }
+  }
+
+  if ( useFallback )
+  {
+    QDesktopServices::openUrl( QUrl::fromLocalFile( mFilePath ) );
+  }
+  return true;
+}
+
+bool QgsCodeEditorWidget::shareOnGist( bool isPublic )
+{
+  const QString accessToken = QgsSettings().value( "pythonConsole/accessTokenGithub", QString() ).toString();
+  if ( accessToken.isEmpty() )
+  {
+    if ( mMessageBar )
+      mMessageBar->pushWarning( QString(), tr( "GitHub personal access token must be generated (see IDE Options)" ) );
+    return false;
+  }
+
+  QString defaultFileName;
+  switch ( mEditor->language() )
+  {
+    case Qgis::ScriptLanguage::Python:
+      defaultFileName = QStringLiteral( "pyqgis_snippet.py" );
+      break;
+
+    case Qgis::ScriptLanguage::Css:
+      defaultFileName = QStringLiteral( "qgis_snippet.css" );
+      break;
+
+    case Qgis::ScriptLanguage::QgisExpression:
+      defaultFileName = QStringLiteral( "qgis_snippet" );
+      break;
+
+    case Qgis::ScriptLanguage::Html:
+      defaultFileName = QStringLiteral( "qgis_snippet.html" );
+      break;
+
+    case Qgis::ScriptLanguage::JavaScript:
+      defaultFileName = QStringLiteral( "qgis_snippet.js" );
+      break;
+
+    case Qgis::ScriptLanguage::Json:
+      defaultFileName = QStringLiteral( "qgis_snippet.json" );
+      break;
+
+    case Qgis::ScriptLanguage::R:
+      defaultFileName = QStringLiteral( "qgis_snippet.r" );
+      break;
+
+    case Qgis::ScriptLanguage::Sql:
+      defaultFileName = QStringLiteral( "qgis_snippet.sql" );
+      break;
+
+    case Qgis::ScriptLanguage::Batch:
+      defaultFileName = QStringLiteral( "qgis_snippet.bat" );
+      break;
+
+    case Qgis::ScriptLanguage::Bash:
+      defaultFileName = QStringLiteral( "qgis_snippet.sh" );
+      break;
+
+    case Qgis::ScriptLanguage::Unknown:
+      defaultFileName = QStringLiteral( "qgis_snippet.txt" );
+      break;
+  }
+  const QString filename = mFilePath.isEmpty() ? defaultFileName : QFileInfo( mFilePath ).fileName();
+
+  const QString contents = mEditor->hasSelectedText() ? mEditor->selectedText() : mEditor->text();
+  const QVariantMap data
+  {
+    { QStringLiteral( "description" ), "Gist created by PyQGIS Console"},
+    { QStringLiteral( "public" ), isPublic },
+    { QStringLiteral( "files" ), QVariantMap{ {filename, QVariantMap{{ QStringLiteral( "content" ), contents }}    } } }
+  };
+
+  QNetworkRequest request;
+  request.setUrl( QUrl( QStringLiteral( "https://api.github.com/gists" ) ) );
+  request.setRawHeader( "Authorization", QStringLiteral( "token %1" ).arg( accessToken ).toLocal8Bit() );
+  request.setHeader( QNetworkRequest::ContentTypeHeader, QLatin1String( "application/json" ) );
+  request.setAttribute( QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::RedirectPolicy::NoLessSafeRedirectPolicy );
+  QgsSetRequestInitiatorClass( request, QStringLiteral( "QgsCodeEditorWidget" ) );
+
+  QNetworkReply *reply = QgsNetworkAccessManager::instance()->post( request, QgsJsonUtils::jsonFromVariant( data ).dump().c_str() );
+  connect( reply, &QNetworkReply::finished, this, [this, reply]
+  {
+    if ( reply->error() == QNetworkReply::NoError )
+    {
+      const QVariantMap replyJson = QgsJsonUtils::parseJson( reply->readAll() ).toMap();
+      const QString link = replyJson.value( QStringLiteral( "html_url" ) ).toString();
+      QDesktopServices::openUrl( QUrl( link ) );
+    }
+    else
+    {
+      if ( mMessageBar )
+        mMessageBar->pushCritical( QString(), tr( "Connection error: %1" ).arg( reply->errorString() ) );
+    }
+    reply->deleteLater();
+  } );
+  return true;
 }
 
 bool QgsCodeEditorWidget::findNext()

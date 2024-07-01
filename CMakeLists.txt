@@ -22,7 +22,7 @@ set(CMAKE_LINK_DEPENDS_NO_SHARED ON)
 #############################################################
 # Project and version
 set(CPACK_PACKAGE_VERSION_MAJOR "3")
-set(CPACK_PACKAGE_VERSION_MINOR "37")
+set(CPACK_PACKAGE_VERSION_MINOR "39")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(COMPLETE_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 set(RELEASE_NAME "Master")
@@ -337,7 +337,7 @@ if(WITH_CORE)
   endif()
 
   find_package(FLEX 2.6 REQUIRED)
-  find_package(BISON REQUIRED)
+  find_package(BISON 2.4 REQUIRED)
 
   #############################################################
   # search for dependencies
@@ -367,6 +367,8 @@ if(WITH_CORE)
   find_package(EXPAT REQUIRED)
   find_package(Spatialindex REQUIRED)
   find_package(LibZip REQUIRED)
+  set (WITH_INTERNAL_NLOHMANN_JSON ON CACHE BOOL "Determines whether the vendored copy of nlohmann-json should be used")
+  find_package(nlohmann_json REQUIRED)
 
   find_package(Sqlite3)
   if (NOT SQLITE3_FOUND)
@@ -1098,7 +1100,6 @@ if (WITH_CORE AND WITH_BINDINGS)
 
   find_package(Qsci REQUIRED)
   include(PythonMacros)
-  include(PyQtMacros)
   include(SIPMacros)
 
   set(SIP_INCLUDES ${PYQT_SIP_DIR} ${CMAKE_SOURCE_DIR}/python)

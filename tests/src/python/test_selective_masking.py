@@ -26,13 +26,16 @@ from qgis.core import (
     QgsLayoutItemMap,
     QgsLayoutItemPage,
     QgsLayoutSize,
+    QgsLineSymbol,
     QgsMapRendererCache,
     QgsMapRendererCustomPainterJob,
     QgsMapRendererParallelJob,
     QgsMapRendererSequentialJob,
     QgsMapSettings,
+    QgsMarkerLineSymbolLayer,
     QgsMarkerSymbol,
     QgsMaskMarkerSymbolLayer,
+    QgsNullSymbolRenderer,
     QgsOuterGlowEffect,
     QgsPalLayerSettings,
     QgsPathResolver,
@@ -78,7 +81,21 @@ def renderMapToImageWithTime(mapsettings, parallel=False, cache=None):
     return (job.renderedImage(), job.renderingTime())
 
 
-class SelectiveMaskingTestBase():
+class TestSelectiveMasking(QgisTestCase):
+
+    @classmethod
+    def control_path_prefix(cls):
+        return "selective_masking"
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestSelectiveMasking, cls).setUpClass()
+        QCoreApplication.setOrganizationName("QGIS_Test")
+        QCoreApplication.setOrganizationDomain("SelectiveMaskingTestBase.com")
+        QCoreApplication.setApplicationName("SelectiveMaskingTestBase")
+        QgsSettings().clear()
+
+        start_app()
 
     def setUp(self):
         self.map_settings = QgsMapSettings()
@@ -174,7 +191,7 @@ class SelectiveMaskingTestBase():
                     renderMapToImageWithTime(map_settings, parallel=do_parallel, cache=cache)
                 img, t = renderMapToImageWithTime(map_settings, parallel=do_parallel, cache=cache)
 
-                suffix = "_" + self.suite_id() + ("_parallel" if do_parallel else "_sequential") + ("_cache" if use_cache else "_nocache")
+                suffix = ("_parallel" if do_parallel else "_sequential") + ("_cache" if use_cache else "_nocache")
                 res = self.image_check(
                     control_name + suffix,
                     control_name,
@@ -237,8 +254,7 @@ class SelectiveMaskingTestBase():
                             "-png", "-r", "300", "-singlefile"])
 
             rendered_image = QImage(image_result_filename)
-            suffix = "_" + self.suite_id()
-            res = self.image_check(control_name + suffix,
+            res = self.image_check(control_name,
                                    control_name,
                                    rendered_image,
                                    control_name,
@@ -1346,54 +1362,32 @@ class SelectiveMaskingTestBase():
         # no rasters
         self.check_layout_export("layout_export_svg_marker_masking", 0, [self.points_layer, self.lines_layer])
 
+    def test_markerline_masked(self):
+        """
+        Test a layout export where a QgsMarkerLineSymbolLayer is masked
+        """
 
-class TestSelectiveMaskingQPainterPathBackend(QgisTestCase, SelectiveMaskingTestBase):
-    """
-    Test selective masking with the QPainterPath backend
-    """
-    @classmethod
-    def control_path_prefix(cls):
-        return "selective_masking"
+        sl = QgsMarkerLineSymbolLayer(True, 7)
+        circle_symbol = QgsMarkerSymbol.createSimple({'size': '3'})
+        sl.setSubSymbol(circle_symbol)
 
-    @classmethod
-    def suite_id(cls):
-        return "qpainterpath"
+        symbol = QgsLineSymbol.createSimple({})
+        symbol.changeSymbolLayer(0, sl)
+        self.lines_layer.setRenderer(QgsSingleSymbolRenderer(symbol))
+        self.polys_layer.setRenderer(QgsNullSymbolRenderer())
 
-    @classmethod
-    def setUpClass(cls):
-        QgsSettings().setValue('map/mask-backend', 'qpainterpath')
-        QgisTestCase.setUpClass()
+        label_settings = self.polys_layer.labeling().settings()
+        fmt = label_settings.format()
+        # enable a mask
+        fmt.mask().setEnabled(True)
+        fmt.mask().setSize(4.0)
+        # and mask other symbol layers underneath
+        fmt.mask().setMaskedSymbolLayers([QgsSymbolLayerReference(self.lines_layer.id(), sl.id())])
+        label_settings.setFormat(fmt)
+        self.polys_layer.labeling().setSettings(label_settings)
 
-    def setUp(self):
-        SelectiveMaskingTestBase.setUp(self)
-
-
-class TestSelectiveMaskingGeometryBackend(QgisTestCase, SelectiveMaskingTestBase):
-    """
-    Test selective masking with the QgsGeometry backend
-    """
-    @classmethod
-    def control_path_prefix(cls):
-        return "selective_masking"
-
-    @classmethod
-    def suite_id(cls):
-        return "geometry"
-
-    @classmethod
-    def setUpClass(cls):
-        QgsSettings().setValue('map/mask-backend', 'geometry')
-        QgisTestCase.setUpClass()
-
-    def setUp(self):
-        SelectiveMaskingTestBase.setUp(self)
+        self.check_layout_export("layout_export_markerline_masked", 0, [self.polys_layer, self.lines_layer])
 
 
 if __name__ == '__main__':
-    QCoreApplication.setOrganizationName("QGIS_Test")
-    QCoreApplication.setOrganizationDomain("SelectiveMaskingTestBase.com")
-    QCoreApplication.setApplicationName("SelectiveMaskingTestBase")
-    QgsSettings().clear()
-
-    start_app()
     unittest.main()
