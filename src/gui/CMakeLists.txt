@@ -35,9 +35,11 @@ set(QGIS_GUI_SRCS
   vector/qgsattributesforminitcode.cpp
   vector/qgsattributesformproperties.cpp
   vector/qgsdiagramproperties.cpp
+  vector/qgsdiagramwidget.cpp
   vector/qgsfieldcalculator.cpp
   vector/qgsjoindialog.cpp
   vector/qgssourcefieldsproperties.cpp
+  vector/qgsstackeddiagramproperties.cpp
   vector/qgsvectorlayerlegendwidget.cpp
   vector/qgsvectorlayerproperties.cpp
   vector/qgswmsdimensiondialog.cpp
@@ -502,6 +504,11 @@ set(QGIS_GUI_SRCS
   settings/qgssettingsregistrygui.cpp
   settings/qgssettingstreemodel.cpp
   settings/qgssettingstreewidget.cpp
+
+  stac/qgsstacconnectiondialog.cpp
+  stac/qgsstacdataitemguiprovider.cpp
+  stac/qgsstacdownloadassetsdialog.cpp
+  stac/qgsstacobjectdetailsdialog.cpp
 
   tableeditor/qgstableeditordialog.cpp
   tableeditor/qgstableeditorformattingwidget.cpp
@@ -1060,6 +1067,7 @@ set(QGIS_GUI_HDRS
   annotations/qgsannotationitemguiregistry.h
   annotations/qgsannotationitemwidget.h
   annotations/qgscreateannotationitemmaptool.h
+  annotations/qgscreateannotationitemmaptool_impl.h
   annotations/qgsmaptoolmodifyannotation.h
 
   attributeformconfig/qgsattributeformcontaineredit.h
@@ -1496,9 +1504,11 @@ set(QGIS_GUI_HDRS
   vector/qgsattributesforminitcode.h
   vector/qgsattributesformproperties.h
   vector/qgsdiagramproperties.h
+  vector/qgsdiagramwidget.h
   vector/qgsfieldcalculator.h
   vector/qgsjoindialog.h
   vector/qgssourcefieldsproperties.h
+  vector/qgsstackeddiagramproperties.h
   vector/qgsvectorlayerlegendwidget.h
   vector/qgsvectorlayerproperties.h
   vector/qgswmsdimensiondialog.h
@@ -1554,6 +1564,11 @@ set(QGIS_GUI_HDRS
   settings/qgssettingsregistrygui.h
   settings/qgssettingstreemodel.h
   settings/qgssettingstreewidget.h
+
+  stac/qgsstacconnectiondialog.h
+  stac/qgsstacdataitemguiprovider.h
+  stac/qgsstacdownloadassetsdialog.h
+  stac/qgsstacobjectdetailsdialog.h
 
   tableeditor/qgstableeditordialog.h
   tableeditor/qgstableeditorformattingwidget.h
@@ -1715,6 +1730,7 @@ target_include_directories(qgis_gui PUBLIC
   ${CMAKE_SOURCE_DIR}/src/gui/raster
   ${CMAKE_SOURCE_DIR}/src/gui/sensor
   ${CMAKE_SOURCE_DIR}/src/gui/settings
+  ${CMAKE_SOURCE_DIR}/src/gui/stac
   ${CMAKE_SOURCE_DIR}/src/gui/tableeditor
   ${CMAKE_SOURCE_DIR}/src/gui/tiledscene
   ${CMAKE_SOURCE_DIR}/src/gui/vector

@@ -278,7 +278,7 @@ The development version
 
 
     enum class PythonEmbeddedMode /BaseType=IntEnum/
-    {
+      {
       Never,
       Ask,
       SessionOnly,
@@ -1530,6 +1530,7 @@ The development version
       SkipSymbolRendering,
       RecordProfile,
       AlwaysUseGlobalMasks,
+      DisableSymbolClippingToExtent,
     };
     typedef QFlags<Qgis::RenderContextFlag> RenderContextFlags;
 
@@ -1922,6 +1923,7 @@ The development version
       SkipGenericModelLogging,
       NotAvailableInStandaloneTool,
       RequiresProject,
+      SecurityRisk,
       Deprecated,
     };
 
@@ -3161,7 +3163,7 @@ The development version
 
     static const double DEFAULT_HIGHLIGHT_MIN_WIDTH_MM;
 
-    static const double SCALE_PRECISION;
+ static const double SCALE_PRECISION;
 
     static const double DEFAULT_Z_COORDINATE;
 

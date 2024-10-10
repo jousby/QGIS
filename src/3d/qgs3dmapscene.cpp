@@ -48,8 +48,8 @@
 #include "qgs3dutils.h"
 #include "qgsabstract3drenderer.h"
 #include "qgscameracontroller.h"
-#include "qgschunkedentity_p.h"
-#include "qgschunknode_p.h"
+#include "qgschunkedentity.h"
+#include "qgschunknode.h"
 #include "qgseventtracing.h"
 #include "qgsmeshlayer.h"
 #include "qgsmeshlayer3drenderer.h"
@@ -58,7 +58,7 @@
 #include "qgspointcloudlayer.h"
 #include "qgspointcloudlayer3drenderer.h"
 #include "qgssourcecache.h"
-#include "qgsterrainentity_p.h"
+#include "qgsterrainentity.h"
 #include "qgsterraingenerator.h"
 #include "qgstiledscenelayer.h"
 #include "qgstiledscenelayer3drenderer.h"
@@ -322,6 +322,12 @@ void Qgs3DMapScene::onCameraChanged()
 
 void Qgs3DMapScene::updateScene( bool forceUpdate )
 {
+  if ( !mSceneUpdatesEnabled )
+  {
+    QgsDebugMsgLevel( "Scene update skipped", 2 );
+    return;
+  }
+
   if ( forceUpdate )
     QgsEventTracing::addEvent( QgsEventTracing::Instant, QStringLiteral( "3D" ), QStringLiteral( "Update Scene" ) );
 

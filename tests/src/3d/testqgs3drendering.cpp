@@ -52,6 +52,7 @@
 #include "qgsdirectionallightsettings.h"
 #include "qgsmetalroughmaterialsettings.h"
 #include "qgspointlightsettings.h"
+#include "qgsphongtexturedmaterialsettings.h"
 
 #include <QFileInfo>
 #include <QDir>
@@ -76,6 +77,7 @@ class TestQgs3DRendering : public QgsTest
     void testEpsg4978LineRendering();
     void testExtrudedPolygons();
     void testPhongShading();
+    void testExtrudedPolygonsTexturedPhong();
     void testExtrudedPolygonsDataDefinedPhong();
     void testExtrudedPolygonsDataDefinedGooch();
     void testExtrudedPolygonsGoochShading();
@@ -325,9 +327,11 @@ void TestQgs3DRendering::testDemTerrain()
   map->setLayers( QList<QgsMapLayer *>() << mLayerRgb );
 
   QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator;
+  demTerrain->setCrs( mProject->crs(), mProject->transformContext() );
   demTerrain->setLayer( mLayerDtm );
   map->setTerrainGenerator( demTerrain );
   map->setTerrainVerticalScale( 3 );
+  QVERIFY( demTerrain->isValid() );
 
   QgsOffscreen3DEngine engine;
   Qgs3DMapScene *scene = new Qgs3DMapScene( *map, &engine );
@@ -358,9 +362,11 @@ void TestQgs3DRendering::testTerrainShading()
   // no terrain layers set!
 
   QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator;
+  demTerrain->setCrs( mProject->crs(), mProject->transformContext() );
   demTerrain->setLayer( mLayerDtm );
   map->setTerrainGenerator( demTerrain );
   map->setTerrainVerticalScale( 3 );
+  QVERIFY( demTerrain->isValid() );
 
   QgsPhongMaterialSettings terrainMaterial;
   terrainMaterial.setAmbient( QColor( 0, 0, 0 ) );
@@ -486,6 +492,59 @@ void TestQgs3DRendering::testPhongShading()
   QImage img = Qgs3DUtils::captureSceneImage( engine, scene );
 
   QGSVERIFYIMAGECHECK( "phong_shading", "phong_shading", img, QString(), 40, QSize( 0, 0 ), 2 );
+}
+
+void TestQgs3DRendering::testExtrudedPolygonsTexturedPhong()
+{
+  // In Qt 5, this test does not work on CI
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+  if ( QgsTest::isCIRun() )
+  {
+    QSKIP( "fails on CI" );
+  }
+#endif
+
+  QgsPhongTexturedMaterialSettings materialSettings;
+  materialSettings.setAmbient( QColor( 26, 26, 26 ) );
+  materialSettings.setSpecular( QColor( 10, 10, 10 ) );
+  materialSettings.setShininess( 1.0 );
+  materialSettings.setDiffuseTexturePath( testDataPath( "/sample_image.png" ) );
+  QgsPolygon3DSymbol *symbol3d = new QgsPolygon3DSymbol;
+  symbol3d->setMaterialSettings( materialSettings.clone() );
+  symbol3d->setExtrusionHeight( 10.f );
+  QgsVectorLayer3DRenderer *renderer3d = new QgsVectorLayer3DRenderer( symbol3d );
+  mLayerBuildings->setRenderer3D( renderer3d );
+
+  const QgsRectangle fullExtent = mLayerDtm->extent();
+
+  Qgs3DMapSettings *map = new Qgs3DMapSettings;
+  map->setCrs( mProject->crs() );
+  map->setExtent( fullExtent );
+  map->setLayers( QList<QgsMapLayer *>() << mLayerBuildings << mLayerRgb );
+  QgsPointLightSettings defaultLight;
+  defaultLight.setIntensity( 1.0 );
+  defaultLight.setPosition( QgsVector3D( 0, 1000, 0 ) );
+  map->setLightSources( { defaultLight.clone() } );
+
+  QgsFlatTerrainGenerator *flatTerrain = new QgsFlatTerrainGenerator;
+  flatTerrain->setCrs( map->crs() );
+  map->setTerrainGenerator( flatTerrain );
+
+  QgsOffscreen3DEngine engine;
+  Qgs3DMapScene *scene = new Qgs3DMapScene( *map, &engine );
+  engine.setRootEntity( scene );
+
+  scene->cameraController()->setLookingAtPoint( QgsVector3D( -60, 10, 360 ), 100, 45, 0 );
+
+  // When running the test on Travis, it would initially return empty rendered image.
+  // Capturing the initial image and throwing it away fixes that. Hopefully we will
+  // find a better fix in the future.
+  Qgs3DUtils::captureSceneImage( engine, scene );
+  QImage img = Qgs3DUtils::captureSceneImage( engine, scene );
+
+  delete scene;
+  delete map;
+  QGSVERIFYIMAGECHECK( "polygon3d_extrusion_textured_phong", "polygon3d_extrusion_textured_phong", img, QString(), 40, QSize( 0, 0 ), 2 );
 }
 
 void TestQgs3DRendering::testExtrudedPolygonsDataDefinedPhong()
@@ -1452,9 +1511,11 @@ void TestQgs3DRendering::testFilteredDemTerrain()
   map->setLayers( QList<QgsMapLayer *>() << mLayerRgb );
 
   QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator;
+  demTerrain->setCrs( mProject->crs(), mProject->transformContext() );
   demTerrain->setLayer( mLayerDtm );
   map->setTerrainGenerator( demTerrain );
   map->setTerrainVerticalScale( 3 );
+  QVERIFY( demTerrain->isValid() );
 
   QgsOffscreen3DEngine engine;
   Qgs3DMapScene *scene = new Qgs3DMapScene( *map, &engine );
@@ -1550,9 +1611,11 @@ void TestQgs3DRendering::testAmbientOcclusion()
   mapSettings.setMapThemeCollection( project.mapThemeCollection() );
 
   QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator;
+  demTerrain->setCrs( mProject->crs(), mProject->transformContext() );
   demTerrain->setLayer( layerDtm );
   mapSettings.setTerrainGenerator( demTerrain );
   mapSettings.setTerrainVerticalScale( 3 );
+  QVERIFY( demTerrain->isValid() );
 
   QgsPointLightSettings defaultPointLight;
   defaultPointLight.setPosition( QgsVector3D( 0, 400, 0 ) );
@@ -1615,9 +1678,11 @@ void TestQgs3DRendering::testDepthBuffer()
   mapSettings.setMapThemeCollection( project.mapThemeCollection() );
 
   QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator;
+  demTerrain->setCrs( mProject->crs(), mProject->transformContext() );
   demTerrain->setLayer( layerDtm );
   mapSettings.setTerrainGenerator( demTerrain );
   mapSettings.setTerrainVerticalScale( 3 );
+  QVERIFY( demTerrain->isValid() );
 
   QgsPointLightSettings defaultPointLight;
   defaultPointLight.setPosition( QgsVector3D( 0, 1000, 0 ) );
@@ -1943,10 +2008,12 @@ void TestQgs3DRendering::test3DSceneExporterBig()
   mapSettings.setPathResolver( project.pathResolver() );
   mapSettings.setMapThemeCollection( project.mapThemeCollection() );
 
-  QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator();
+  QgsDemTerrainGenerator *demTerrain = new QgsDemTerrainGenerator;
+  demTerrain->setCrs( mProject->crs(), mProject->transformContext() );
   demTerrain->setLayer( layerDtm );
   mapSettings.setTerrainGenerator( demTerrain );
   mapSettings.setTerrainVerticalScale( 3 );
+  QVERIFY( demTerrain->isValid() );
 
   QgsPointLightSettings defaultPointLight;
   defaultPointLight.setPosition( QgsVector3D( 0, 400, 0 ) );
