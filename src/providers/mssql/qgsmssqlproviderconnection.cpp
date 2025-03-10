@@ -160,6 +160,7 @@ void QgsMssqlProviderConnection::createVectorTable( const QString &schema, const
   }
   QMap<int, int> map;
   QString errCause;
+  QString createdLayerUri;
   const Qgis::VectorExportResult res = QgsMssqlProvider::createEmptyLayer(
     newUri.uri(),
     fields,
@@ -167,6 +168,7 @@ void QgsMssqlProviderConnection::createVectorTable( const QString &schema, const
     srs,
     overwrite,
     &map,
+    createdLayerUri,
     &errCause,
     options
   );
@@ -174,6 +176,27 @@ void QgsMssqlProviderConnection::createVectorTable( const QString &schema, const
   {
     throw QgsProviderConnectionException( QObject::tr( "An error occurred while creating the vector layer: %1" ).arg( errCause ) );
   }
+}
+
+QString QgsMssqlProviderConnection::createVectorLayerExporterDestinationUri( const VectorLayerExporterOptions &options, QVariantMap &providerOptions ) const
+{
+  QgsDataSourceUri destUri( uri() );
+
+  destUri.setTable( options.layerName );
+  destUri.setSchema( options.schema );
+  destUri.setGeometryColumn( options.wkbType != Qgis::WkbType::NoGeometry ? ( options.geometryColumn.isEmpty() ? QStringLiteral( "geom" ) : options.geometryColumn ) : QString() );
+  if ( !options.primaryKeyColumns.isEmpty() )
+  {
+    if ( options.primaryKeyColumns.length() > 1 )
+    {
+      QgsMessageLog::logMessage( QStringLiteral( "Multiple primary keys are not supported by SQL Server, ignoring" ), QString(), Qgis::MessageLevel::Info );
+    }
+    destUri.setKeyColumn( options.primaryKeyColumns.at( 0 ) );
+  }
+
+  providerOptions.clear();
+
+  return destUri.uri( false );
 }
 
 QString QgsMssqlProviderConnection::tableUri( const QString &schema, const QString &name ) const
@@ -788,6 +811,16 @@ bool QgsMssqlProviderConnection::validateSqlVectorLayer( const SqlVectorLayerOpt
   }
 
   return true;
+}
+
+Qgis::DatabaseProviderTableImportCapabilities QgsMssqlProviderConnection::tableImportCapabilities() const
+{
+  return Qgis::DatabaseProviderTableImportCapability::SetGeometryColumnName | Qgis::DatabaseProviderTableImportCapability::SetPrimaryKeyName;
+}
+
+QString QgsMssqlProviderConnection::defaultPrimaryKeyColumnName() const
+{
+  return QStringLiteral( "qgs_fid" );
 }
 
 QgsAbstractDatabaseProviderConnection::SqlVectorLayerOptions QgsMssqlProviderConnection::sqlOptions( const QString &layerSource )
