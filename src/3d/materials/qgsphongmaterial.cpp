@@ -1,0 +1,186 @@
+/***************************************************************************
+  qgsphongmaterial.cpp
+  --------------------------------------
+  Date                 : April 2026
+  Copyright            : (C) 2026 by Dominik Cindrić
+  Email                : viper dot miniq at gmail dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
+#include "qgsphongmaterial.h"
+
+#include "qgs3dutils.h"
+
+#include <QString>
+#include <QUrl>
+#include <Qt3DRender/QEffect>
+#include <Qt3DRender/QFilterKey>
+#include <Qt3DRender/QGraphicsApiFilter>
+#include <Qt3DRender/QParameter>
+#include <Qt3DRender/QRenderPass>
+#include <Qt3DRender/QShaderProgram>
+#include <Qt3DRender/QTechnique>
+
+#include "moc_qgsphongmaterial.cpp"
+
+using namespace Qt::StringLiterals;
+
+///@cond PRIVATE
+QgsPhongMaterial::QgsPhongMaterial( QNode *parent )
+  : QgsMaterial( parent )
+  , mAmbientParameter( new Qt3DRender::QParameter( u"ambientColor"_s, QColor::fromRgbF( 0.05f, 0.05f, 0.05f, 1.0f ) ) )
+  , mDiffuseParameter( new Qt3DRender::QParameter( u"diffuseColor"_s, QColor::fromRgbF( 0.7f, 0.7f, 0.7f, 1.0f ) ) )
+  , mSpecularParameter( new Qt3DRender::QParameter( u"specularColor"_s, QColor::fromRgbF( 0.01f, 0.01f, 0.01f, 1.0f ) ) )
+  , mShininessParameter( new Qt3DRender::QParameter( u"shininess"_s, 150.0f ) )
+  , mOpacityParameter( new Qt3DRender::QParameter( u"opacity"_s, 1.0f ) )
+{
+  init();
+}
+
+QgsPhongMaterial::~QgsPhongMaterial() = default;
+
+void QgsPhongMaterial::init()
+{
+  connect( mAmbientParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsPhongMaterial::handleAmbientChanged );
+  connect( mDiffuseParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsPhongMaterial::handleDiffuseChanged );
+  connect( mSpecularParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsPhongMaterial::handleSpecularChanged );
+  connect( mShininessParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsPhongMaterial::handleShininessChanged );
+  connect( mOpacityParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsPhongMaterial::handleOpacityChanged );
+
+  Qt3DRender::QEffect *effect = new Qt3DRender::QEffect();
+  effect->addParameter( mAmbientParameter );
+  effect->addParameter( mDiffuseParameter );
+  effect->addParameter( mSpecularParameter );
+  effect->addParameter( mShininessParameter );
+  effect->addParameter( mOpacityParameter );
+
+  mShaderProgram = new Qt3DRender::QShaderProgram();
+
+  Qt3DRender::QRenderPass *renderPass = new Qt3DRender::QRenderPass();
+  renderPass->setShaderProgram( mShaderProgram );
+
+  Qt3DRender::QFilterKey *filterKey = new Qt3DRender::QFilterKey();
+  filterKey->setName( u"renderingStyle"_s );
+  filterKey->setValue( u"forward"_s );
+
+  Qt3DRender::QTechnique *technique = new Qt3DRender::QTechnique();
+  technique->graphicsApiFilter()->setApi( Qt3DRender::QGraphicsApiFilter::OpenGL );
+  technique->graphicsApiFilter()->setProfile( Qt3DRender::QGraphicsApiFilter::CoreProfile );
+  technique->graphicsApiFilter()->setMajorVersion( 3 );
+  technique->graphicsApiFilter()->setMinorVersion( 3 );
+  technique->addFilterKey( filterKey );
+  technique->addRenderPass( renderPass );
+
+  effect->addTechnique( technique );
+  setEffect( effect );
+
+  updateShaders();
+}
+
+void QgsPhongMaterial::updateShaders()
+{
+  const QByteArray fragCode = Qt3DRender::QShaderProgram::loadSource( QUrl( u"qrc:/shaders/phong.frag"_s ) );
+
+  if ( mDataDefinedEnabled )
+  {
+    mShaderProgram->setShaderCode( Qt3DRender::QShaderProgram::Vertex, Qt3DRender::QShaderProgram::loadSource( QUrl( u"qrc:/shaders/phongDataDefined.vert"_s ) ) );
+    mShaderProgram->setFragmentShaderCode( Qgs3DUtils::addDefinesToShaderCode( fragCode, QStringList( { u"DATA_DEFINED"_s } ) ) );
+  }
+  else
+  {
+    mShaderProgram->setShaderCode( Qt3DRender::QShaderProgram::Vertex, Qt3DRender::QShaderProgram::loadSource( QUrl( u"qrc:/shaders/default.vert"_s ) ) );
+    mShaderProgram->setFragmentShaderCode( fragCode );
+  }
+}
+
+void QgsPhongMaterial::setDataDefinedEnabled( bool enabled )
+{
+  if ( enabled != mDataDefinedEnabled )
+  {
+    mDataDefinedEnabled = enabled;
+    updateShaders();
+  }
+}
+
+void QgsPhongMaterial::setAmbient( const QColor &ambient )
+{
+  mAmbientParameter->setValue( ambient );
+}
+
+void QgsPhongMaterial::setDiffuse( const QColor &diffuse )
+{
+  mDiffuseParameter->setValue( diffuse );
+}
+
+void QgsPhongMaterial::setSpecular( const QColor &specular )
+{
+  mSpecularParameter->setValue( specular );
+}
+
+void QgsPhongMaterial::setShininess( float shininess )
+{
+  mShininessParameter->setValue( shininess );
+}
+
+void QgsPhongMaterial::setOpacity( float opacity )
+{
+  mOpacityParameter->setValue( opacity );
+}
+
+QColor QgsPhongMaterial::ambient() const
+{
+  return mAmbientParameter->value().value<QColor>();
+}
+
+QColor QgsPhongMaterial::diffuse() const
+{
+  return mDiffuseParameter->value().value<QColor>();
+}
+
+QColor QgsPhongMaterial::specular() const
+{
+  return mSpecularParameter->value().value<QColor>();
+}
+
+float QgsPhongMaterial::shininess() const
+{
+  return mShininessParameter->value().toFloat();
+}
+
+float QgsPhongMaterial::opacity() const
+{
+  return mOpacityParameter->value().toFloat();
+}
+
+void QgsPhongMaterial::handleAmbientChanged( const QVariant &var )
+{
+  emit ambientChanged( var.value<QColor>() );
+}
+
+void QgsPhongMaterial::handleDiffuseChanged( const QVariant &var )
+{
+  emit diffuseChanged( var.value<QColor>() );
+}
+
+void QgsPhongMaterial::handleSpecularChanged( const QVariant &var )
+{
+  emit specularChanged( var.value<QColor>() );
+}
+
+void QgsPhongMaterial::handleShininessChanged( const QVariant &var )
+{
+  emit shininessChanged( var.toFloat() );
+}
+
+void QgsPhongMaterial::handleOpacityChanged( const QVariant &var )
+{
+  emit opacityChanged( var.toFloat() );
+}
+
+///@endcond PRIVATE
