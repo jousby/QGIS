@@ -1,0 +1,109 @@
+/***************************************************************************
+  qgsgoochmaterial.h
+  --------------------------------------
+  Date                 : April 2026
+  Copyright            : (C) 2026 by Dominik Cindrić
+  Email                : viper dot miniq at gmail dot com
+ ***************************************************************************
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ ***************************************************************************/
+
+#ifndef QGSGOOCHMATERIAL_H
+#define QGSGOOCHMATERIAL_H
+
+#include "qgis_3d.h"
+#include "qgsmaterial.h"
+
+#include <QColor>
+#include <QObject>
+
+#define SIP_NO_FILE
+
+namespace Qt3DRender
+{
+  class QParameter;
+  class QShaderProgram;
+} // namespace Qt3DRender
+
+///@cond PRIVATE
+
+/**
+ * \ingroup qgis_3d
+ * \brief A Gooch shading material for use in QGIS 3D views.
+ * \since QGIS 4.2
+ */
+class _3D_EXPORT QgsGoochMaterial : public QgsMaterial
+{
+    Q_OBJECT
+
+  public:
+    /**
+     * Constructor for QgsGoochMaterial, with the specified \a parent node.
+     */
+    explicit QgsGoochMaterial( Qt3DCore::QNode *parent = nullptr );
+    ~QgsGoochMaterial() override;
+
+    QColor diffuse() const;
+    QColor specular() const;
+    QColor warm() const;
+    QColor cool() const;
+    float shininess() const;
+    float alpha() const;
+    float beta() const;
+
+  public slots:
+    void setDiffuse( const QColor &diffuse );
+    void setSpecular( const QColor &specular );
+    void setWarm( const QColor &warm );
+    void setCool( const QColor &cool );
+    void setShininess( float shininess );
+    void setAlpha( float alpha );
+    void setBeta( float beta );
+
+    /**
+     * Switches between data-defined (per-vertex attribute) and uniform color mode.
+     * When \a enabled is TRUE, the goochDataDefined.vert shader is used and
+     * the DATA_DEFINED define is injected into the fragment shader.
+     */
+    void setDataDefinedEnabled( bool enabled );
+
+  signals:
+    void diffuseChanged( const QColor &diffuse );
+    void specularChanged( const QColor &specular );
+    void warmChanged( const QColor &warm );
+    void coolChanged( const QColor &cool );
+    void shininessChanged( float shininess );
+    void alphaChanged( float alpha );
+    void betaChanged( float beta );
+
+  private:
+    void init();
+    void updateShaders();
+
+    void handleDiffuseChanged( const QVariant &var );
+    void handleSpecularChanged( const QVariant &var );
+    void handleWarmChanged( const QVariant &var );
+    void handleCoolChanged( const QVariant &var );
+    void handleShininessChanged( const QVariant &var );
+    void handleAlphaChanged( const QVariant &var );
+    void handleBetaChanged( const QVariant &var );
+
+    Qt3DRender::QParameter *mDiffuseParameter = nullptr;
+    Qt3DRender::QParameter *mSpecularParameter = nullptr;
+    Qt3DRender::QParameter *mWarmParameter = nullptr;
+    Qt3DRender::QParameter *mCoolParameter = nullptr;
+    Qt3DRender::QParameter *mShininessParameter = nullptr;
+    Qt3DRender::QParameter *mAlphaParameter = nullptr;
+    Qt3DRender::QParameter *mBetaParameter = nullptr;
+    Qt3DRender::QShaderProgram *mShaderProgram = nullptr;
+    bool mDataDefinedEnabled = false;
+};
+
+///@endcond PRIVATE
+
+#endif // QGSGOOCHMATERIAL_H
