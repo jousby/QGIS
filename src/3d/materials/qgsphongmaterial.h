@@ -41,11 +41,6 @@ namespace Qt3DRender
 class _3D_EXPORT QgsPhongMaterial : public QgsMaterial
 {
     Q_OBJECT
-    Q_PROPERTY( QColor ambient READ ambient WRITE setAmbient NOTIFY ambientChanged )
-    Q_PROPERTY( QColor diffuse READ diffuse WRITE setDiffuse NOTIFY diffuseChanged )
-    Q_PROPERTY( QColor specular READ specular WRITE setSpecular NOTIFY specularChanged )
-    Q_PROPERTY( float shininess READ shininess WRITE setShininess NOTIFY shininessChanged )
-    Q_PROPERTY( float opacity READ opacity WRITE setOpacity NOTIFY opacityChanged )
 
   public:
     /**
