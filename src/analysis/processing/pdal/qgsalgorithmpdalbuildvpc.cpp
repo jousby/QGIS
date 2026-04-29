@@ -165,7 +165,7 @@ QStringList QgsPdalBuildVpcAlgorithm::createArgumentLists( const QVariantMap &pa
   }
 
   const double overviewLength = parameterAsDouble( parameters, "OVERVIEW_LENGTH", context );
-  if ( !std::isnan( overviewLength ) )
+  if ( overviewLength > 0 )
   {
     args << u"--overview-length=%1"_s.arg( overviewLength );
   }
