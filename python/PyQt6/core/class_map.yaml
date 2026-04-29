@@ -12042,7 +12042,7 @@ QgsPointCloudLayer.QgsPointCloudLayer: src/core/pointcloud/qgspointcloudlayer.h#
 QgsPointCloudLayer.QgsPointCloudLayer: src/core/pointcloud/qgspointcloudlayer.h#L55
 QgsPointCloudLayer.__repr__: src/core/pointcloud/qgspointcloudlayer.h#L124
 QgsPointCloudLayer.attributes: src/core/pointcloud/qgspointcloudlayer.h#L168
-QgsPointCloudLayer.chunkAttributeValuesChanged: src/core/pointcloud/qgspointcloudlayer.h#L399
+QgsPointCloudLayer.chunkAttributeValuesChanged: src/core/pointcloud/qgspointcloudlayer.h#L407
 QgsPointCloudLayer.clone: src/core/pointcloud/qgspointcloudlayer.h#L132
 QgsPointCloudLayer.commitChanges: src/core/pointcloud/qgspointcloudlayer.h#L289
 QgsPointCloudLayer.commitError: src/core/pointcloud/qgspointcloudlayer.h#L297
@@ -12060,12 +12060,12 @@ QgsPointCloudLayer.isEditable: src/core/pointcloud/qgspointcloudlayer.h#L144
 QgsPointCloudLayer.isModified: src/core/pointcloud/qgspointcloudlayer.h#L145
 QgsPointCloudLayer.isVpc: src/core/pointcloud/qgspointcloudlayer.h#L362
 QgsPointCloudLayer.loadDefaultStyle: src/core/pointcloud/qgspointcloudlayer.h#L161
-QgsPointCloudLayer.overview: src/core/pointcloud/qgspointcloudlayer.h#L369
+QgsPointCloudLayer.overview: src/core/pointcloud/qgspointcloudlayer.h#L370
 QgsPointCloudLayer.pointCount: src/core/pointcloud/qgspointcloudlayer.h#L173
 QgsPointCloudLayer.profileSource: src/core/pointcloud/qgspointcloudlayer.h#L135
 QgsPointCloudLayer.profileSourceId: src/core/pointcloud/qgspointcloudlayer.h#L136
 QgsPointCloudLayer.profileSourceName: src/core/pointcloud/qgspointcloudlayer.h#L137
-QgsPointCloudLayer.raiseError: src/core/pointcloud/qgspointcloudlayer.h#L385
+QgsPointCloudLayer.raiseError: src/core/pointcloud/qgspointcloudlayer.h#L393
 QgsPointCloudLayer.readStyle: src/core/pointcloud/qgspointcloudlayer.h#L152
 QgsPointCloudLayer.readSymbology: src/core/pointcloud/qgspointcloudlayer.h#L151
 QgsPointCloudLayer.readXml: src/core/pointcloud/qgspointcloudlayer.h#L147
@@ -12078,9 +12078,9 @@ QgsPointCloudLayer.setTransformContext: src/core/pointcloud/qgspointcloudlayer.h
 QgsPointCloudLayer.startEditing: src/core/pointcloud/qgspointcloudlayer.h#L268
 QgsPointCloudLayer.statistics: src/core/pointcloud/qgspointcloudlayer.h#L244
 QgsPointCloudLayer.statisticsCalculationState: src/core/pointcloud/qgspointcloudlayer.h#L251
-QgsPointCloudLayer.statisticsCalculationStateChanged: src/core/pointcloud/qgspointcloudlayer.h#L392
+QgsPointCloudLayer.statisticsCalculationStateChanged: src/core/pointcloud/qgspointcloudlayer.h#L400
 QgsPointCloudLayer.subsetString: src/core/pointcloud/qgspointcloudlayer.h#L214
-QgsPointCloudLayer.subsetStringChanged: src/core/pointcloud/qgspointcloudlayer.h#L378
+QgsPointCloudLayer.subsetStringChanged: src/core/pointcloud/qgspointcloudlayer.h#L386
 QgsPointCloudLayer.supportsEditing: src/core/pointcloud/qgspointcloudlayer.h#L143
 QgsPointCloudLayer.sync3DRendererTo2DRenderer: src/core/pointcloud/qgspointcloudlayer.h#L230
 QgsPointCloudLayer.writeStyle: src/core/pointcloud/qgspointcloudlayer.h#L155
