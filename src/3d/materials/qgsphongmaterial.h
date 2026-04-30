@@ -49,15 +49,12 @@ class _3D_EXPORT QgsPhongMaterial : public QgsMaterial
     explicit QgsPhongMaterial( Qt3DCore::QNode *parent = nullptr );
     ~QgsPhongMaterial() override;
 
-    QColor ambient() const;
-    QColor diffuse() const;
-    QColor specular() const;
-    float shininess() const;
-    float opacity() const;
-
   public slots:
+    //! Sets ambient color component, must be a SRGB color
     void setAmbient( const QColor &ambient );
+    //! Sets diffuse color component, must be a SRGB color
     void setDiffuse( const QColor &diffuse );
+    //! Sets specular color component, must be a SRGB color
     void setSpecular( const QColor &specular );
     void setShininess( float shininess );
     void setOpacity( float opacity );

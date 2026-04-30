@@ -48,18 +48,14 @@ class _3D_EXPORT QgsGoochMaterial : public QgsMaterial
     explicit QgsGoochMaterial( Qt3DCore::QNode *parent = nullptr );
     ~QgsGoochMaterial() override;
 
-    QColor diffuse() const;
-    QColor specular() const;
-    QColor warm() const;
-    QColor cool() const;
-    float shininess() const;
-    float alpha() const;
-    float beta() const;
-
   public slots:
+    //! Sets diffuse color component, must be a SRGB color
     void setDiffuse( const QColor &diffuse );
+    //! Sets specular color component, must be a SRGB color
     void setSpecular( const QColor &specular );
+    //! Sets warm color component, must be a SRGB color
     void setWarm( const QColor &warm );
+    //! Sets cool color component, must be a SRGB color
     void setCool( const QColor &cool );
     void setShininess( float shininess );
     void setAlpha( float alpha );

@@ -34,14 +34,18 @@ using namespace Qt::StringLiterals;
 ///@cond PRIVATE
 QgsGoochMaterial::QgsGoochMaterial( QNode *parent )
   : QgsMaterial( parent )
-  , mDiffuseParameter( new Qt3DRender::QParameter( u"kd"_s, QColor::fromRgbF( 0.7f, 0.7f, 0.7f, 1.0f ) ) )
-  , mSpecularParameter( new Qt3DRender::QParameter( u"ks"_s, QColor::fromRgbF( 0.01f, 0.01f, 0.01f, 1.0f ) ) )
-  , mWarmParameter( new Qt3DRender::QParameter( u"kyellow"_s, QColor::fromRgbF( 1.0f, 1.0f, 0.0f, 1.0f ) ) )
-  , mCoolParameter( new Qt3DRender::QParameter( u"kblue"_s, QColor::fromRgbF( 0.0f, 0.0f, 1.0f, 1.0f ) ) )
+  , mDiffuseParameter( new Qt3DRender::QParameter( u"kd"_s, QVariant() ) )
+  , mSpecularParameter( new Qt3DRender::QParameter( u"ks"_s, QVariant() ) )
+  , mWarmParameter( new Qt3DRender::QParameter( u"kyellow"_s, QVariant() ) )
+  , mCoolParameter( new Qt3DRender::QParameter( u"kblue"_s, QVarinat() ) )
   , mShininessParameter( new Qt3DRender::QParameter( u"shininess"_s, 150.0f ) )
   , mAlphaParameter( new Qt3DRender::QParameter( u"alpha"_s, 0.25f ) )
   , mBetaParameter( new Qt3DRender::QParameter( u"beta"_s, 0.5f ) )
 {
+  setDiffuse( QColor::fromRgbF( 0.7f, 0.7f, 0.7f, 1.0f ) );
+  setSpecular( QColor::fromRgbF( 0.01f, 0.01f, 0.01f, 1.0f ) );
+  setWarm( QColor::fromRgbF( 1.0f, 1.0f, 0.0f, 1.0f ) );
+  setCool( QColor::fromRgbF( 0.0f, 0.0f, 1.0f, 1.0f ) );
   init();
 }
 
@@ -49,14 +53,6 @@ QgsGoochMaterial::~QgsGoochMaterial() = default;
 
 void QgsGoochMaterial::init()
 {
-  connect( mDiffuseParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleDiffuseChanged );
-  connect( mSpecularParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleSpecularChanged );
-  connect( mWarmParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleWarmChanged );
-  connect( mCoolParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleCoolChanged );
-  connect( mShininessParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleShininessChanged );
-  connect( mAlphaParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleAlphaChanged );
-  connect( mBetaParameter, &Qt3DRender::QParameter::valueChanged, this, &QgsGoochMaterial::handleBetaChanged );
-
   Qt3DRender::QEffect *effect = new Qt3DRender::QEffect();
   effect->addParameter( mDiffuseParameter );
   effect->addParameter( mSpecularParameter );
@@ -116,22 +112,22 @@ void QgsGoochMaterial::setDataDefinedEnabled( bool enabled )
 
 void QgsGoochMaterial::setDiffuse( const QColor &diffuse )
 {
-  mDiffuseParameter->setValue( diffuse );
+  mDiffuseParameter->setValue( Qgs3DUtils::srgbToLinear( diffuse ) );
 }
 
 void QgsGoochMaterial::setSpecular( const QColor &specular )
 {
-  mSpecularParameter->setValue( specular );
+  mSpecularParameter->setValue( Qgs3DUtils::srgbToLinear( specular ) );
 }
 
 void QgsGoochMaterial::setWarm( const QColor &warm )
 {
-  mWarmParameter->setValue( warm );
+  mWarmParameter->setValue( Qgs3DUtils::srgbToLinear( warm ) );
 }
 
 void QgsGoochMaterial::setCool( const QColor &cool )
 {
-  mCoolParameter->setValue( cool );
+  mCoolParameter->setValue( Qgs3DUtils::srgbToLinear( cool ) );
 }
 
 void QgsGoochMaterial::setShininess( float shininess )
@@ -147,41 +143,6 @@ void QgsGoochMaterial::setAlpha( float alpha )
 void QgsGoochMaterial::setBeta( float beta )
 {
   mBetaParameter->setValue( beta );
-}
-
-QColor QgsGoochMaterial::diffuse() const
-{
-  return mDiffuseParameter->value().value<QColor>();
-}
-
-QColor QgsGoochMaterial::specular() const
-{
-  return mSpecularParameter->value().value<QColor>();
-}
-
-QColor QgsGoochMaterial::warm() const
-{
-  return mWarmParameter->value().value<QColor>();
-}
-
-QColor QgsGoochMaterial::cool() const
-{
-  return mCoolParameter->value().value<QColor>();
-}
-
-float QgsGoochMaterial::shininess() const
-{
-  return mShininessParameter->value().toFloat();
-}
-
-float QgsGoochMaterial::alpha() const
-{
-  return mAlphaParameter->value().toFloat();
-}
-
-float QgsGoochMaterial::beta() const
-{
-  return mBetaParameter->value().toFloat();
 }
 
 void QgsGoochMaterial::handleDiffuseChanged( const QVariant &var )
