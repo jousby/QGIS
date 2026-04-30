@@ -265,8 +265,8 @@ void QgsInstancedPoint3DSymbolHandler::finalize( Qt3DCore::QEntity *parent, cons
       }
 
       // as we are relative to chunk center elevation we have to add mChunkOrigin.z()
-      minZ += pos.z() + static_cast<float>( mChunkOrigin.z() );
-      maxZ += pos.z() + static_cast<float>( mChunkOrigin.z() );
+      minZ += static_cast< float >( pos.z() + mChunkOrigin.z() );
+      maxZ += static_cast< float >( pos.z() + mChunkOrigin.z() );
 
       if ( minZ < mZMin )
         mZMin = static_cast< float >( minZ );
