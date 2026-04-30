@@ -290,6 +290,7 @@ QgsMaterial *QgsPhongMaterial3DHandler::buildMaterial( const QgsAbstractMaterial
   {
     const QColor ambient = context.isSelected() ? context.selectionColor().darker() : phongSettings->ambient();
     const QColor diffuse = context.isSelected() ? context.selectionColor() : phongSettings->diffuse();
+    const QColor specular = phongSettings->specular();
 
     material->setAmbient(
       QColor::fromRgbF(
