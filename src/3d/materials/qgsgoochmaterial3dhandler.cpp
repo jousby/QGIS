@@ -67,10 +67,10 @@ QByteArray QgsGoochMaterial3DHandler::dataDefinedVertexColorsAsByte( const QgsAb
   const QgsGoochMaterialSettings *goochSettings = dynamic_cast< const QgsGoochMaterialSettings * >( settings );
   Q_ASSERT( goochSettings );
   const QgsPropertyCollection &dataDefinedProperties = goochSettings->dataDefinedProperties();
-  const QColor diffuse = dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Diffuse, expressionContext, goochSettings->diffuse() );
-  const QColor warm = dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Warm, expressionContext, goochSettings->warm() );
-  const QColor cool = dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Cool, expressionContext, goochSettings->cool() );
-  const QColor specular = dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Specular, expressionContext, goochSettings->specular() );
+  const QColor diffuse = Qgs3DUtils::srgbToLinear( dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Diffuse, expressionContext, goochSettings->diffuse() ) );
+  const QColor warm = Qgs3DUtils::srgbToLinear( dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Warm, expressionContext, goochSettings->warm() ) );
+  const QColor cool = Qgs3DUtils::srgbToLinear( dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Cool, expressionContext, goochSettings->cool() ) );
+  const QColor specular = Qgs3DUtils::srgbToLinear( dataDefinedProperties.valueAsColor( QgsAbstractMaterialSettings::Property::Specular, expressionContext, goochSettings->specular() ) );
 
   QByteArray array;
   array.resize( sizeof( unsigned char ) * 12 );

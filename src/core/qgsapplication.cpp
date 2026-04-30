@@ -131,6 +131,10 @@
 
 using namespace Qt::StringLiterals;
 
+const QgsSettingsEntryString *QgsApplication::settingsApplicationFullName = new QgsSettingsEntryString( u"full-name"_s, QgsSettingsTree::sTreeApp, QString() );
+
+const QgsSettingsEntryStringList *QgsApplication::settingsSkippedGdalDrivers = new QgsSettingsEntryStringList( u"skip-drivers"_s, QgsSettingsTree::sTreeGdal, QStringList() );
+
 const QgsSettingsEntryString *QgsApplication::settingsLocaleUserLocale = new QgsSettingsEntryString( u"userLocale"_s, QgsSettingsTree::sTreeLocale, QString() );
 
 const QgsSettingsEntryBool *QgsApplication::settingsLocaleOverrideFlag = new QgsSettingsEntryBool( u"overrideFlag"_s, QgsSettingsTree::sTreeLocale, false );
@@ -1499,8 +1503,11 @@ QString QgsApplication::applicationFullName()
     return *sApplicationFullName();
 
   //last resort
-  QgsSettings settings;
-  *sApplicationFullName() = settings.value( u"/qgis/application_full_name"_s, u"%1 %2"_s.arg( applicationName(), platform() ) ).toString();
+  const QString storedFullName = settingsApplicationFullName->value();
+  if ( !storedFullName.isEmpty() )
+    *sApplicationFullName() = storedFullName;
+  else
+    *sApplicationFullName() = u"%1 %2"_s.arg( applicationName(), platform() );
   return *sApplicationFullName();
 }
 
@@ -2017,32 +2024,14 @@ void QgsApplication::setSkippedGdalDrivers( const QStringList &skippedGdalDriver
   *sGdalSkipList() = skippedGdalDrivers;
   *sDeferredSkippedGdalDrivers() = deferredSkippedGdalDrivers;
 
-  QgsSettings settings;
-  settings.setValue( u"gdal/skipDrivers"_s, skippedGdalDrivers.join( ','_L1 ) );
+  settingsSkippedGdalDrivers->setValue( skippedGdalDrivers );
 
   applyGdalSkippedDrivers();
 }
 
 void QgsApplication::registerGdalDriversFromSettings()
 {
-  QgsSettings settings;
-  QString joinedList, delimiter;
-  if ( settings.contains( u"gdal/skipDrivers"_s ) )
-  {
-    joinedList = settings.value( u"gdal/skipDrivers"_s, QString() ).toString();
-    delimiter = u","_s;
-  }
-  else
-  {
-    joinedList = settings.value( u"gdal/skipList"_s, QString() ).toString();
-    delimiter = u" "_s;
-  }
-  QStringList myList;
-  if ( !joinedList.isEmpty() )
-  {
-    myList = joinedList.split( delimiter );
-  }
-  *sGdalSkipList() = myList;
+  *sGdalSkipList() = settingsSkippedGdalDrivers->value();
   applyGdalSkippedDrivers();
 }
 

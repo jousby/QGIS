@@ -548,6 +548,7 @@ int QgisEvent = QEvent::User + 1;
       CreateLabeling = 1 << 25, //!< Provider can set labeling settings using backend-specific formatting information. Since QGIS 3.6. See QgsVectorDataProvider::createLabeling().
       ReloadData = 1 << 26, //!< Provider is able to force reload data
       FeatureSymbology = 1 << 27, //!< Provider is able retrieve embedded symbology associated with individual features \since QGIS 3.20
+      CacheData = 1 << 28, //!< Provider caches source data and should force provider data reloads when dependent layers are committed \since QGIS 4.2
       EditingCapabilities = AddFeatures | DeleteFeatures | ChangeAttributeValues | ChangeGeometries | AddAttributes | DeleteAttributes | RenameAttributes, //!< Bitmask of all editing capabilities
     };
     Q_ENUM( VectorProviderCapability )
@@ -2584,6 +2585,20 @@ int QgisEvent = QEvent::User + 1;
     Q_ENUM( CrsWktVariant )
 
     /**
+     * Behavior to use when encountering a layer with an unknown (invalid) CRS.
+     *
+     * \since QGIS 4.2
+     */
+    enum class UnknownLayerCrsBehavior : int
+    {
+      NoAction = 0,         //!< Take no action and leave as unknown CRS
+      PromptUserForCrs = 1, //!< User is prompted for a CRS choice
+      UseProjectCrs = 2,    //!< Copy the current project's CRS
+      UseDefaultCrs = 3,    //!< Use the default layer CRS set via QGIS options
+    };
+    Q_ENUM( UnknownLayerCrsBehavior )
+
+    /**
      * Cartesian axes.
      *
      * \since QGIS 3.34
@@ -4349,6 +4364,34 @@ int QgisEvent = QEvent::User + 1;
     Q_ENUM( LightSourceType )
 
     /**
+     * Skybox types for 3D scenes.
+     *
+     * \since QGIS 4.2
+     */
+    enum class SkyboxType : int
+    {
+      DistinctTextures, //!< Cube map built from distinct textures
+      // this is currently broken for z-up coordinate system
+      //Panoramic, //!< Panoramic texture
+    };
+    Q_ENUM( SkyboxType )
+
+    /**
+     * Skybox texture cube mapping for distinct texture skyboxes.
+     *
+     * \since QGIS 4.2
+     */
+    enum class SkyboxCubeMapping : int
+    {
+      NativeZUp,             //!< Textures exported for Z-up (+X Right, +Y Forward, +Z Up)
+      OpenGLYUp,             //!< Standard OpenGL/WebGL standard (+X Right, +Y Top, -Z Forward)
+      GodotYUp,              //!< Godot standard (+X Right, +Y Top, -Z Forward, with vertical flip)
+      UnrealEngineZUp,       //!< Unreal engine standard (+X Forward, +Y Right, +Z Up, Left-handed)
+      LeftHandedYUpMirrored, //!< Left-Handed, Y-Up coordinate systems (e.g., Unity convention +X Right, +Y Top, +Z Forward, with horizontal mirror)
+    };
+    Q_ENUM( SkyboxCubeMapping )
+
+    /**
      * The navigation mode used by 3D cameras.
      *
      * \since QGIS 3.30
@@ -4607,11 +4650,13 @@ int QgisEvent = QEvent::User + 1;
      */
     enum class ArcGisRestServiceCapability : int SIP_ENUM_BASETYPE( IntFlag )
     {
-      Map = 1 << 0,    //!< Render map
-      Query = 1 << 1,  //!< Query features
-      Update = 1 << 2, //!< Update features
-      Delete = 1 << 3, //!< Delete features
-      Create = 1 << 4, //!< Create features
+      Map = 1 << 0,       //!< Render map
+      Query = 1 << 1,     //!< Query features
+      Update = 1 << 2,    //!< Update features
+      Delete = 1 << 3,    //!< Delete features
+      Create = 1 << 4,    //!< Create features
+      Image = 1 << 5,     //!< Image capabilities
+      TilesOnly = 1 << 6, //!< Service supports tiled image requests only
     };
     Q_ENUM( ArcGisRestServiceCapability )
 

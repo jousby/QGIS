@@ -39,14 +39,14 @@ uniform sampler2D normalMap;
 in vec4 worldTangent;
 #endif
 
-#if defined(BASE_COLOR_MAP) || defined(METALNESS_MAP) || defined(ROUGHNESS_MAP) || defined(AMBIENT_OCCLUSION_MAP) || defined(NORMAL_MAP)
-in vec2 texCoord;
+#ifdef EMISSION_MAP
+uniform sampler2D emissionMap;
+uniform float emissiveFactor = 1;
 #endif
 
-// Exposure correction
-uniform float exposure = 0.0;
-// Gamma correction
-uniform float gamma = 2.2;
+#if defined(BASE_COLOR_MAP) || defined(METALNESS_MAP) || defined(ROUGHNESS_MAP) || defined(AMBIENT_OCCLUSION_MAP) || defined(NORMAL_MAP) || defined(EMISSION_MAP)
+in vec2 texCoord;
+#endif
 
 const float PI = 3.14159265359;
 
@@ -69,6 +69,20 @@ mat3 calcTangentToWorldSpaceMatrix(const in vec3 wNormal, const in vec4 wTangent
     // Construct matrix to transform from tangent space to world space
     mat3 tangentToWorldMatrix = mat3(wFixedTangent, wBinormal, wNormal);
     return tangentToWorldMatrix;
+}
+
+mat3 calcTangentSpace(const in vec3 wNormal, const in vec3 wPosition, const in vec2 uv)
+{
+    vec3 Q1 = dFdx(wPosition);
+    vec3 Q2 = dFdy(wPosition);
+    vec2 st1 = dFdx(uv);
+    vec2 st2 = dFdy(uv);
+
+    vec3 N = normalize(wNormal);
+    vec3 T = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B = -normalize(cross(N, T));
+
+    return mat3(T, B, N);
 }
 #endif
 
@@ -115,10 +129,17 @@ float alphaToMipLevel(float alpha)
 
 float normalDistribution(const in vec3 n, const in vec3 h, const in float alpha)
 {
-    // Blinn-Phong approximation - see
-    // http://graphicrants.blogspot.co.uk/2013/08/specular-brdf-reference.html
-    float specPower = 2.0 / (alpha * alpha) - 2.0;
-    return (specPower + 2.0) / (2.0 * PI) * pow(max(dot(n, h), 0.0), specPower);
+    // Trowbridge-Reitz GGX
+    // see https://google.github.io/filament/Filament.md.html, "Normal distribution function (specular D)"
+    // https://learnopengl.com/PBR/Theory, "Normal distribution function"
+    float alpha2 = alpha * alpha;
+    float nDotH = max(dot(n, h), 0.0);
+    float nDotH2 = nDotH * nDotH;
+
+    float denom = (nDotH2 * (alpha2 - 1.0) + 1.0);
+
+    // our alpha is already clamped by remapRoughness, so denom won't perfectly hit 0
+    return alpha2 / (PI * denom * denom);
 }
 
 vec3 fresnelFactor(const in vec3 color, const in float cosineFactor)
@@ -129,14 +150,42 @@ vec3 fresnelFactor(const in vec3 color, const in float cosineFactor)
     return clamp(F, f, vec3(1.0));
 }
 
+float geometrySchlickGGX(const in float nDotV, const in float k)
+{
+    // see https://learnopengl.com/PBR/Theory, "Geometry function"
+    float nom = nDotV;
+    float denom = nDotV * (1.0 - k) + k;
+    return nom / denom;
+}
+
 float geometricModel(const in float lDotN,
                      const in float vDotN,
-                     const in vec3 h)
+                     const in float roughness,
+                     const in bool isIBL)
 {
-    // Implicit geometric model (equal to denominator in specular model).
-    // This currently assumes that there is no attenuation by geometric shadowing or
-    // masking according to the microfacet theory.
-    return lDotN * vDotN;
+    // see https://learnopengl.com/PBR/Theory, "Geometry function"
+
+    float k;
+    if ( isIBL)
+    {
+        // for image based lighting we do NOT apply the Epic hotness fix
+        k = roughness * roughness / 2.0;
+    }
+    else
+    {
+        // calculate k for direct lighting
+        // uses Epic Unreal Engine 4 fix of k = (roughness + 1)^2 / 8.
+        // see https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
+        // "Specular G"
+        k = ((roughness + 1) * (roughness + 1)) / 8.0;
+    }
+
+    // note that geometrySchlickGGX uses "nDotV", but dot product is commutative, so
+    // that's not an issue
+    float ggx1 = geometrySchlickGGX(vDotN, k);
+    float ggx2 = geometrySchlickGGX(lDotN, k);
+
+    return ggx1 * ggx2;
 }
 
 vec3 specularModel(const in vec3 F0,
@@ -144,7 +193,9 @@ vec3 specularModel(const in vec3 F0,
                    const in float sDotN,
                    const in float vDotN,
                    const in vec3 n,
-                   const in vec3 h)
+                   const in vec3 h,
+                   const in float roughness,
+                   const in bool isIBL)
 {
     // Clamp sDotN and vDotN to small positive value to prevent the
     // denominator in the reflection equation going to infinity. Balance this
@@ -154,7 +205,7 @@ vec3 specularModel(const in vec3 F0,
     float vDotNPrime = max(vDotN, 0.001);
 
     vec3 F = fresnelFactor(F0, sDotH);
-    float G = geometricModel(sDotNPrime, vDotNPrime, h);
+    float G = geometricModel(sDotNPrime, vDotNPrime, roughness, isIBL);
 
     vec3 cSpec = F * G / (4.0 * sDotNPrime * vDotNPrime);
     return clamp(cSpec, vec3(0.0), vec3(1.0));
@@ -166,6 +217,7 @@ vec3 pbrModel(const in int lightIndex,
               const in vec3 wView,
               const in vec3 baseColor,
               const in float metalness,
+              const in float roughness,
               const in float alpha,
               const in float ambientOcclusion)
 {
@@ -223,14 +275,16 @@ vec3 pbrModel(const in int lightIndex,
     vec3 F0 = mix(dielectricColor, baseColor, metalness);
     vec3 specularFactor = vec3(0.0);
     if (sDotN > 0.0) {
-        specularFactor = specularModel(F0, sDotH, sDotN, vDotN, n, h);
+        specularFactor = specularModel(F0, sDotH, sDotN, vDotN, n, h, roughness, false);
         specularFactor *= normalDistribution(n, h, alpha);
     }
     vec3 specularColor = lights[lightIndex].color;
-    vec3 specular = specularColor * specularFactor;
+    vec3 specular = specularColor * specularFactor * max(sDotN, 0.0);
 
-    // Blend between diffuse and specular to conserver energy
-    vec3 color = att * lights[lightIndex].intensity * (specular + diffuse * (vec3(1.0) - specular));
+    // Blend between diffuse and specular to conserve energy
+    // see https://learnopengl.com/PBR/Theory, "Energy conservation"
+    vec3 kS = fresnelFactor(F0, sDotH);
+    vec3 color = att * lights[lightIndex].intensity * (specular + diffuse * (vec3(1.0) - kS));
 
     // Reduce by ambient occlusion amount
     color *= ambientOcclusion;
@@ -242,6 +296,7 @@ vec3 pbrIblModel(const in vec3 wNormal,
                  const in vec3 wView,
                  const in vec3 baseColor,
                  const in float metalness,
+                 const in float roughness,
                  const in float alpha,
                  const in float ambientOcclusion)
 {
@@ -265,7 +320,7 @@ vec3 pbrIblModel(const in vec3 wNormal,
     // Calculate specular component
     vec3 dielectricColor = vec3(0.04);
     vec3 F0 = mix(dielectricColor, baseColor, metalness);
-    vec3 specularFactor = specularModel(F0, lDotH, lDotN, vDotN, n, h);
+    vec3 specularFactor = specularModel(F0, lDotH, lDotN, vDotN, n, h, roughness, true);
 
     float lod = alphaToMipLevel(alpha);
 //#define DEBUG_SPECULAR_LODS
@@ -291,22 +346,14 @@ vec3 pbrIblModel(const in vec3 wNormal,
     vec3 specular = specularSkyColor * specularFactor;
 
     // Blend between diffuse and specular to conserve energy
-    vec3 color = specular + diffuse * (vec3(1.0) - specularFactor);
+    // see https://learnopengl.com/PBR/Theory, "Energy conservation"
+    vec3 kS = fresnelFactor(F0, lDotH);
+    vec3 color = specular + diffuse * (vec3(1.0) - kS);
 
     // Reduce by ambient occlusion amount
     color *= ambientOcclusion;
 
     return color;
-}
-
-vec3 toneMap(const in vec3 c)
-{
-    return c / (c + vec3(1.0));
-}
-
-vec3 gammaCorrect(const in vec3 color)
-{
-    return pow(color, vec3(1.0 / gamma));
 }
 
 vec4 metalRoughFunction(const in vec4 baseColor,
@@ -315,7 +362,8 @@ vec4 metalRoughFunction(const in vec4 baseColor,
                         const in float ambientOcclusion,
                         const in vec3 worldPosition,
                         const in vec3 worldView,
-                        const in vec3 worldNormal)
+                        const in vec3 worldNormal,
+                        const in vec2 activeTexCoord)
 {
     vec3 cLinear = vec3(0.0);
 
@@ -327,6 +375,7 @@ vec4 metalRoughFunction(const in vec4 baseColor,
                                worldView,
                                baseColor.rgb,
                                metalness,
+                               roughness,
                                alpha,
                                ambientOcclusion);
     }
@@ -338,20 +387,16 @@ vec4 metalRoughFunction(const in vec4 baseColor,
                             worldView,
                             baseColor.rgb,
                             metalness,
+                            roughness,
                             alpha,
                             ambientOcclusion);
     }
 
-    // Apply exposure correction
-    cLinear *= pow(2.0, exposure);
-
-    // Apply simple (Reinhard) tonemap transform to get into LDR range [0, 1]
-    vec3 cToneMapped = toneMap(cLinear);
-
-    // Apply gamma correction prior to display
-    vec3 cGamma = gammaCorrect(cToneMapped);
-
-    return vec4(cGamma, 1.0);
+#ifdef EMISSION_MAP
+    vec3 emission = texture(emissionMap, activeTexCoord).rgb * emissiveFactor;
+    cLinear += emission;
+#endif
+    return vec4(cLinear, 1.0);
 }
 
 
@@ -359,32 +404,53 @@ out vec4 fragColor;
 
 void main()
 {
+#if defined(BASE_COLOR_MAP) || defined(METALNESS_MAP) || defined(ROUGHNESS_MAP) || defined(AMBIENT_OCCLUSION_MAP) || defined(NORMAL_MAP) || defined(EMISSION_MAP)
+    vec2 activeTexCoord = texCoord;
+#else
+    // unused
+    vec2 activeTexCoord = vec2(0.0f, 0.0f);
+#endif
+
+    vec3 worldView = normalize(eyePosition - worldPosition);
+
 #ifdef BASE_COLOR_MAP
-    vec4 c = texture(baseColorMap, texCoord);
+    vec4 c = texture(baseColorMap, activeTexCoord);
 #else
     vec4 c = baseColor;
 #endif
 
 #ifdef METALNESS_MAP
-    float m = texture(metalnessMap, texCoord).r;
+    float m = texture(metalnessMap, activeTexCoord).r;
 #else
     float m = metalness;
 #endif
 
 #ifdef ROUGHNESS_MAP
-    float r = texture(roughnessMap, texCoord).r;
+    float r = texture(roughnessMap, activeTexCoord).r;
 #else
     float r = roughness;
 #endif
 
 #ifdef AMBIENT_OCCLUSION_MAP
-    float ao = texture(ambientOcclusionMap, texCoord).r;
+    float ao = texture(ambientOcclusionMap, activeTexCoord).r;
 #else
     float ao = 1.0;
 #endif
 
 #ifdef NORMAL_MAP
-    vec3 n = normalize(((calcTangentToWorldSpaceMatrix(worldNormal, worldTangent) * ((((texture(normalMap, texCoord).rgb * float(2.0))) - vec3(1.0))))));
+    vec3 n;
+    vec3 mapN = texture(normalMap, activeTexCoord).rgb * 2.0 - 1.0;
+    if (length(worldTangent.xyz) > 0.001)
+    {
+        // use model tangents if they exist
+        n = normalize(calcTangentToWorldSpaceMatrix(worldNormal, worldTangent) * mapN);
+    }
+    else
+    {
+        // fall back to derivative tangents if we don't have model tangents (worse quality)
+        mat3 transposedTBN = calcTangentSpace(worldNormal, worldPosition, activeTexCoord);
+        n = normalize(transposedTBN * mapN);
+    }
 #else
 
 #ifdef FLAT_SHADING
@@ -398,6 +464,6 @@ void main()
 
     fragColor = metalRoughFunction(c, m, r, ao,
                                    worldPosition,
-                                   normalize(eyePosition - worldPosition),
-                                   n);
+                                   worldView,
+                                   n, activeTexCoord);
 }
