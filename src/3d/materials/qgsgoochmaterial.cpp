@@ -38,14 +38,14 @@ QgsGoochMaterial::QgsGoochMaterial( QNode *parent )
   , mSpecularParameter( new Qt3DRender::QParameter( u"ks"_s, QVariant() ) )
   , mWarmParameter( new Qt3DRender::QParameter( u"kyellow"_s, QVariant() ) )
   , mCoolParameter( new Qt3DRender::QParameter( u"kblue"_s, QVariant() ) )
-  , mShininessParameter( new Qt3DRender::QParameter( u"shininess"_s, 150.0f ) )
+  , mShininessParameter( new Qt3DRender::QParameter( u"shininess"_s, 100.0f ) )
   , mAlphaParameter( new Qt3DRender::QParameter( u"alpha"_s, 0.25f ) )
   , mBetaParameter( new Qt3DRender::QParameter( u"beta"_s, 0.5f ) )
 {
   setDiffuse( QColor::fromRgbF( 0.7f, 0.7f, 0.7f, 1.0f ) );
-  setSpecular( QColor::fromRgbF( 0.01f, 0.01f, 0.01f, 1.0f ) );
-  setWarm( QColor::fromRgbF( 1.0f, 1.0f, 0.0f, 1.0f ) );
-  setCool( QColor::fromRgbF( 0.0f, 0.0f, 1.0f, 1.0f ) );
+  setSpecular( QColor::fromRgbF( 1.0f, 1.0f, 1.0f, 1.0f ) );
+  setWarm( QColor::fromRgbF( 0.42f, 0.0f, 0.42f, 1.0f ) );
+  setCool( QColor::fromRgbF( 1.0f, 0.51f, 0.0f, 1.0f ) );
   init();
 }
 
@@ -143,41 +143,6 @@ void QgsGoochMaterial::setAlpha( float alpha )
 void QgsGoochMaterial::setBeta( float beta )
 {
   mBetaParameter->setValue( beta );
-}
-
-void QgsGoochMaterial::handleDiffuseChanged( const QVariant &var )
-{
-  emit diffuseChanged( var.value<QColor>() );
-}
-
-void QgsGoochMaterial::handleSpecularChanged( const QVariant &var )
-{
-  emit specularChanged( var.value<QColor>() );
-}
-
-void QgsGoochMaterial::handleWarmChanged( const QVariant &var )
-{
-  emit warmChanged( var.value<QColor>() );
-}
-
-void QgsGoochMaterial::handleCoolChanged( const QVariant &var )
-{
-  emit coolChanged( var.value<QColor>() );
-}
-
-void QgsGoochMaterial::handleShininessChanged( const QVariant &var )
-{
-  emit shininessChanged( var.toFloat() );
-}
-
-void QgsGoochMaterial::handleAlphaChanged( const QVariant &var )
-{
-  emit alphaChanged( var.toFloat() );
-}
-
-void QgsGoochMaterial::handleBetaChanged( const QVariant &var )
-{
-  emit betaChanged( var.toFloat() );
 }
 
 ///@endcond PRIVATE

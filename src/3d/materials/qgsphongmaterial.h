@@ -66,22 +66,9 @@ class _3D_EXPORT QgsPhongMaterial : public QgsMaterial
      */
     void setDataDefinedEnabled( bool enabled );
 
-  signals:
-    void ambientChanged( const QColor &ambient );
-    void diffuseChanged( const QColor &diffuse );
-    void specularChanged( const QColor &specular );
-    void shininessChanged( float shininess );
-    void opacityChanged( float opacity );
-
   private:
     void init();
     void updateShaders();
-
-    void handleAmbientChanged( const QVariant &var );
-    void handleDiffuseChanged( const QVariant &var );
-    void handleSpecularChanged( const QVariant &var );
-    void handleShininessChanged( const QVariant &var );
-    void handleOpacityChanged( const QVariant &var );
 
     Qt3DRender::QParameter *mAmbientParameter = nullptr;
     Qt3DRender::QParameter *mDiffuseParameter = nullptr;

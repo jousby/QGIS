@@ -68,26 +68,9 @@ class _3D_EXPORT QgsGoochMaterial : public QgsMaterial
      */
     void setDataDefinedEnabled( bool enabled );
 
-  signals:
-    void diffuseChanged( const QColor &diffuse );
-    void specularChanged( const QColor &specular );
-    void warmChanged( const QColor &warm );
-    void coolChanged( const QColor &cool );
-    void shininessChanged( float shininess );
-    void alphaChanged( float alpha );
-    void betaChanged( float beta );
-
   private:
     void init();
     void updateShaders();
-
-    void handleDiffuseChanged( const QVariant &var );
-    void handleSpecularChanged( const QVariant &var );
-    void handleWarmChanged( const QVariant &var );
-    void handleCoolChanged( const QVariant &var );
-    void handleShininessChanged( const QVariant &var );
-    void handleAlphaChanged( const QVariant &var );
-    void handleBetaChanged( const QVariant &var );
 
     Qt3DRender::QParameter *mDiffuseParameter = nullptr;
     Qt3DRender::QParameter *mSpecularParameter = nullptr;

@@ -37,12 +37,12 @@ QgsPhongMaterial::QgsPhongMaterial( QNode *parent )
   , mAmbientParameter( new Qt3DRender::QParameter( u"ambientColor"_s, QVariant() ) )
   , mDiffuseParameter( new Qt3DRender::QParameter( u"diffuseColor"_s, QVariant() ) )
   , mSpecularParameter( new Qt3DRender::QParameter( u"specularColor"_s, QVariant() ) )
-  , mShininessParameter( new Qt3DRender::QParameter( u"shininess"_s, 150.0f ) )
+  , mShininessParameter( new Qt3DRender::QParameter( u"shininess"_s, 0.0f ) )
   , mOpacityParameter( new Qt3DRender::QParameter( u"opacity"_s, 1.0f ) )
 {
-  setAmbient( QColor::fromRgbF( 0.05f, 0.05f, 0.05f, 1.0f ) );
+  setAmbient( QColor::fromRgbF( 0.1f, 0.1f, 0.1f, 1.0f ) );
   setDiffuse( QColor::fromRgbF( 0.7f, 0.7f, 0.7f, 1.0f ) );
-  setSpecular( QColor::fromRgbF( 0.01f, 0.01f, 0.01f, 1.0f ) );
+  setSpecular( QColor::fromRgbF( 1.0f, 1.0f, 1.0f, 1.0f ) );
   init();
 }
 
@@ -128,31 +128,6 @@ void QgsPhongMaterial::setShininess( float shininess )
 void QgsPhongMaterial::setOpacity( float opacity )
 {
   mOpacityParameter->setValue( opacity );
-}
-
-void QgsPhongMaterial::handleAmbientChanged( const QVariant &var )
-{
-  emit ambientChanged( var.value<QColor>() );
-}
-
-void QgsPhongMaterial::handleDiffuseChanged( const QVariant &var )
-{
-  emit diffuseChanged( var.value<QColor>() );
-}
-
-void QgsPhongMaterial::handleSpecularChanged( const QVariant &var )
-{
-  emit specularChanged( var.value<QColor>() );
-}
-
-void QgsPhongMaterial::handleShininessChanged( const QVariant &var )
-{
-  emit shininessChanged( var.toFloat() );
-}
-
-void QgsPhongMaterial::handleOpacityChanged( const QVariant &var )
-{
-  emit opacityChanged( var.toFloat() );
 }
 
 ///@endcond PRIVATE
