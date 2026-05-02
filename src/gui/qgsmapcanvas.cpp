@@ -2281,9 +2281,6 @@ void QgsMapCanvas::flashGeometries( const QList<QgsGeometry> &geometries, const 
     else
     {
       rb->setStrokeColor( c );
-      QColor ssc = rb->secondaryStrokeColor();
-      ssc.setAlpha( c.alpha() );
-      rb->setSecondaryStrokeColor( ssc );
     }
     rb->update();
   } );
