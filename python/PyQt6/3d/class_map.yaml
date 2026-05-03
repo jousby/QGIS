@@ -267,14 +267,14 @@ QgsAbstractTerrainSettings.verticalScale: src/3d/terrain/qgsabstractterrainsetti
 QgsAbstractTerrainSettings.writeCommonProperties: src/3d/terrain/qgsabstractterrainsettings.h#L206
 QgsAbstractTerrainSettings.writeXml: src/3d/terrain/qgsabstractterrainsettings.h#L98
 QgsAbstractTerrainSettings: src/3d/terrain/qgsabstractterrainsettings.h#L44
-QgsAbstractVectorLayer3DRenderer.copyBaseProperties: src/3d/qgsabstractvectorlayer3drenderer.h#L139
+QgsAbstractVectorLayer3DRenderer.copyBaseProperties: src/3d/qgsabstractvectorlayer3drenderer.h#L138
 QgsAbstractVectorLayer3DRenderer.layer: src/3d/qgsabstractvectorlayer3drenderer.h#L128
-QgsAbstractVectorLayer3DRenderer.readXmlBaseProperties: src/3d/qgsabstractvectorlayer3drenderer.h#L143
+QgsAbstractVectorLayer3DRenderer.readXmlBaseProperties: src/3d/qgsabstractvectorlayer3drenderer.h#L144
 QgsAbstractVectorLayer3DRenderer.resolveReferences: src/3d/qgsabstractvectorlayer3drenderer.h#L135
 QgsAbstractVectorLayer3DRenderer.setLayer: src/3d/qgsabstractvectorlayer3drenderer.h#L126
 QgsAbstractVectorLayer3DRenderer.setTilingSettings: src/3d/qgsabstractvectorlayer3drenderer.h#L131
 QgsAbstractVectorLayer3DRenderer.tilingSettings: src/3d/qgsabstractvectorlayer3drenderer.h#L133
-QgsAbstractVectorLayer3DRenderer.writeXmlBaseProperties: src/3d/qgsabstractvectorlayer3drenderer.h#L141
+QgsAbstractVectorLayer3DRenderer.writeXmlBaseProperties: src/3d/qgsabstractvectorlayer3drenderer.h#L142
 QgsAbstractVectorLayer3DRenderer: src/3d/qgsabstractvectorlayer3drenderer.h#L120
 QgsAnnotationLayer3DRenderer.altitudeClamping: src/3d/qgsannotationlayer3drenderer.h#L91
 QgsAnnotationLayer3DRenderer.clone: src/3d/qgsannotationlayer3drenderer.h#L79
