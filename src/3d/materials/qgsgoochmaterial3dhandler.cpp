@@ -159,13 +159,7 @@ bool QgsGoochMaterial3DHandler::updatePreviewScene( Qt3DCore::QEntity *sceneRoot
   if ( !material || material->objectName() != "goochMaterial"_L1 )
     return false;
 
-  material->setDiffuse( goochSettings->diffuse() );
-  material->setSpecular( goochSettings->specular() );
-  material->setCool( goochSettings->cool() );
-  material->setWarm( goochSettings->warm() );
-  material->setShininess( goochSettings->shininess() );
-  material->setAlpha( goochSettings->alpha() );
-  material->setBeta( goochSettings->beta() );
+  applySettingsToMaterial( goochSettings, material );
 
   return true;
 }
@@ -179,15 +173,21 @@ QgsMaterial *QgsGoochMaterial3DHandler::buildMaterial( const QgsAbstractMaterial
   QgsGoochMaterial *material = new QgsGoochMaterial;
   material->setObjectName( u"goochMaterial"_s );
 
-  const QColor diffuseColor = context.isSelected() ? context.selectionColor() : goochSettings->diffuse();
-  material->setDiffuse( diffuseColor );
-  material->setSpecular( goochSettings->specular() );
-  material->setWarm( goochSettings->warm() );
-  material->setCool( goochSettings->cool() );
-  material->setShininess( goochSettings->shininess() );
-  material->setAlpha( goochSettings->alpha() );
-  material->setBeta( goochSettings->beta() );
+  applySettingsToMaterial( goochSettings, material );
+  if ( context.isSelected() )
+    material->setDiffuse( context.selectionColor() );
   material->setDataDefinedEnabled( dataDefinedProperties.hasActiveProperties() );
 
   return material;
+}
+
+void QgsGoochMaterial3DHandler::applySettingsToMaterial( const QgsGoochMaterialSettings *settings, QgsGoochMaterial *material )
+{
+  material->setDiffuse( settings->diffuse() );
+  material->setSpecular( settings->specular() );
+  material->setCool( settings->cool() );
+  material->setWarm( settings->warm() );
+  material->setShininess( settings->shininess() );
+  material->setAlpha( settings->alpha() );
+  material->setBeta( settings->beta() );
 }
