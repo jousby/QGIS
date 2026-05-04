@@ -288,13 +288,31 @@ QgsMaterial *QgsPhongMaterial3DHandler::buildMaterial( const QgsAbstractMaterial
 
   if ( !phongSettings->dataDefinedProperties().hasActiveProperties() )
   {
-    const QColor ambient = Qgs3DUtils::srgbToLinear( context.isSelected() ? context.selectionColor().darker() : phongSettings->ambient() );
-    const QColor diffuse = Qgs3DUtils::srgbToLinear( context.isSelected() ? context.selectionColor() : phongSettings->diffuse() );
-    const QColor specular = Qgs3DUtils::srgbToLinear( phongSettings->specular() );
+    const QColor ambient = context.isSelected() ? context.selectionColor().darker() : phongSettings->ambient();
+    const QColor diffuse = context.isSelected() ? context.selectionColor() : phongSettings->diffuse();
+    const QColor specular = phongSettings->specular();
 
-    material->setAmbient( ambient );
-    material->setDiffuse( diffuse );
-    material->setSpecular( specular );
+    material->setAmbient(
+      QColor::fromRgbF(
+        static_cast< float >( ambient.redF() * phongSettings->ambientCoefficient() ),
+        static_cast< float >( ambient.greenF() * phongSettings->ambientCoefficient() ),
+        static_cast< float >( ambient.blueF() * phongSettings->ambientCoefficient() )
+      )
+    );
+    material->setDiffuse(
+      QColor::fromRgbF(
+        static_cast< float >( diffuse.redF() * phongSettings->diffuseCoefficient() ),
+        static_cast< float >( diffuse.greenF() * phongSettings->diffuseCoefficient() ),
+        static_cast< float >( diffuse.blueF() * phongSettings->diffuseCoefficient() )
+      )
+    );
+    material->setSpecular(
+      QColor::fromRgbF(
+        static_cast< float >( specular.redF() * phongSettings->specularCoefficient() ),
+        static_cast< float >( specular.greenF() * phongSettings->specularCoefficient() ),
+        static_cast< float >( specular.blueF() * phongSettings->specularCoefficient() )
+      )
+    );
   }
 
   material->setShininess( static_cast<float>( phongSettings->shininess() ) );
