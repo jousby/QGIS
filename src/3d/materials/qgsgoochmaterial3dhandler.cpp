@@ -187,7 +187,7 @@ void QgsGoochMaterial3DHandler::applySettingsToMaterial( const QgsGoochMaterialS
   material->setSpecular( settings->specular() );
   material->setCool( settings->cool() );
   material->setWarm( settings->warm() );
-  material->setShininess( settings->shininess() );
-  material->setAlpha( settings->alpha() );
-  material->setBeta( settings->beta() );
+  material->setShininess( static_cast<float>( settings->shininess() ) );
+  material->setAlpha( static_cast<float>( settings->alpha() ) );
+  material->setBeta( static_cast<float>( settings->beta() ) );
 }
