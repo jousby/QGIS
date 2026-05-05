@@ -2214,14 +2214,14 @@ QgsCategorizedSymbolRenderer.legendSymbolItemsCheckable: src/core/symbology/qgsc
 QgsCategorizedSymbolRenderer.matchToSymbols: src/core/symbology/qgscategorizedsymbolrenderer.h#L453
 QgsCategorizedSymbolRenderer.moveCategory: src/core/symbology/qgscategorizedsymbolrenderer.h#L305
 QgsCategorizedSymbolRenderer.originalSymbolForFeature: src/core/symbology/qgscategorizedsymbolrenderer.h#L197
-QgsCategorizedSymbolRenderer.rebuildHash: src/core/symbology/qgscategorizedsymbolrenderer.h#L497
+QgsCategorizedSymbolRenderer.rebuildHash: src/core/symbology/qgscategorizedsymbolrenderer.h#L500
 QgsCategorizedSymbolRenderer.save: src/core/symbology/qgscategorizedsymbolrenderer.h#L344
 QgsCategorizedSymbolRenderer.setClassAttribute: src/core/symbology/qgscategorizedsymbolrenderer.h#L337
 QgsCategorizedSymbolRenderer.setDataDefinedSizeLegend: src/core/symbology/qgscategorizedsymbolrenderer.h#L428
 QgsCategorizedSymbolRenderer.setLegendSymbolItem: src/core/symbology/qgscategorizedsymbolrenderer.h#L406
 QgsCategorizedSymbolRenderer.setSourceColorRamp: src/core/symbology/qgscategorizedsymbolrenderer.h#L396
 QgsCategorizedSymbolRenderer.setSourceSymbol: src/core/symbology/qgscategorizedsymbolrenderer.h#L373
-QgsCategorizedSymbolRenderer.skipRender: src/core/symbology/qgscategorizedsymbolrenderer.h#L502
+QgsCategorizedSymbolRenderer.skipRender: src/core/symbology/qgscategorizedsymbolrenderer.h#L505
 QgsCategorizedSymbolRenderer.sortByLabel: src/core/symbology/qgscategorizedsymbolrenderer.h#L319
 QgsCategorizedSymbolRenderer.sortByValue: src/core/symbology/qgscategorizedsymbolrenderer.h#L312
 QgsCategorizedSymbolRenderer.sourceColorRamp: src/core/symbology/qgscategorizedsymbolrenderer.h#L380
@@ -2229,8 +2229,8 @@ QgsCategorizedSymbolRenderer.sourceSymbol: src/core/symbology/qgscategorizedsymb
 QgsCategorizedSymbolRenderer.startRender: src/core/symbology/qgscategorizedsymbolrenderer.h#L198
 QgsCategorizedSymbolRenderer.stopRender: src/core/symbology/qgscategorizedsymbolrenderer.h#L199
 QgsCategorizedSymbolRenderer.symbolForFeature: src/core/symbology/qgscategorizedsymbolrenderer.h#L196
-QgsCategorizedSymbolRenderer.symbolForValue: src/core/symbology/qgscategorizedsymbolrenderer.h#L508
-QgsCategorizedSymbolRenderer.symbolForValue: src/core/symbology/qgscategorizedsymbolrenderer.h#L525
+QgsCategorizedSymbolRenderer.symbolForValue: src/core/symbology/qgscategorizedsymbolrenderer.h#L511
+QgsCategorizedSymbolRenderer.symbolForValue: src/core/symbology/qgscategorizedsymbolrenderer.h#L528
 QgsCategorizedSymbolRenderer.symbols: src/core/symbology/qgscategorizedsymbolrenderer.h#L208
 QgsCategorizedSymbolRenderer.toSld: src/core/symbology/qgscategorizedsymbolrenderer.h#L204
 QgsCategorizedSymbolRenderer.toSld: src/core/symbology/qgscategorizedsymbolrenderer.h#L205
