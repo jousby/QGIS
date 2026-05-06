@@ -75,6 +75,7 @@ set(QGIS_3D_SRCS
   lights/qgspointlightsettings.cpp
 
   materials/qgsglobematerial.cpp
+  materials/qgsgoochmaterial.cpp
   materials/qgsgoochmaterial3dhandler.cpp
   materials/qgshighlightmaterial.cpp
   materials/qgsmaterial.cpp
@@ -83,6 +84,7 @@ set(QGIS_3D_SRCS
   materials/qgsmetalroughmaterial3dhandler.cpp
   materials/qgsmetalroughtexturedmaterial3dhandler.cpp
   materials/qgsnullmaterial3dhandler.cpp
+  materials/qgsphongmaterial.cpp
   materials/qgsphongmaterial3dhandler.cpp
   materials/qgsphongtexturedmaterial.cpp
   materials/qgsphongtexturedmaterial3dhandler.cpp
@@ -208,6 +210,7 @@ set(QGIS_3D_HDRS
   lights/qgspointlightsettings.h
 
   materials/qgsglobematerial.h
+  materials/qgsgoochmaterial.h
   materials/qgsgoochmaterial3dhandler.h
   materials/qgshighlightmaterial.h
   materials/qgsmaterial.h
@@ -216,6 +219,7 @@ set(QGIS_3D_HDRS
   materials/qgsmetalroughmaterial3dhandler.h
   materials/qgsmetalroughtexturedmaterial3dhandler.h
   materials/qgsnullmaterial3dhandler.h
+  materials/qgsphongmaterial.h
   materials/qgsphongmaterial3dhandler.h
   materials/qgsphongtexturedmaterial.h
   materials/qgsphongtexturedmaterial3dhandler.h
