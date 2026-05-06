@@ -105,19 +105,22 @@ void QgsPhongMaterial::setDataDefinedEnabled( bool enabled )
   }
 }
 
-void QgsPhongMaterial::setAmbient( const QColor &ambient )
+void QgsPhongMaterial::setAmbient( const QColor &ambient, float scaleFactor )
 {
-  mAmbientParameter->setValue( Qgs3DUtils::srgbToLinear( ambient ) );
+  const QColor color = Qgs3DUtils::srgbToLinear( ambient );
+  mAmbientParameter->setValue( QColor::fromRgbF( color.redF() * scaleFactor, color.greenF() * scaleFactor, color.blueF() * scaleFactor ) );
 }
 
-void QgsPhongMaterial::setDiffuse( const QColor &diffuse )
+void QgsPhongMaterial::setDiffuse( const QColor &diffuse, float scaleFactor )
 {
-  mDiffuseParameter->setValue( Qgs3DUtils::srgbToLinear( diffuse ) );
+  const QColor color = Qgs3DUtils::srgbToLinear( diffuse );
+  mDiffuseParameter->setValue( QColor::fromRgbF( color.redF() * scaleFactor, color.greenF() * scaleFactor, color.blueF() * scaleFactor ) );
 }
 
-void QgsPhongMaterial::setSpecular( const QColor &specular )
+void QgsPhongMaterial::setSpecular( const QColor &specular, float scaleFactor )
 {
-  mSpecularParameter->setValue( Qgs3DUtils::srgbToLinear( specular ) );
+  const QColor color = Qgs3DUtils::srgbToLinear( specular );
+  mSpecularParameter->setValue( QColor::fromRgbF( color.redF() * scaleFactor, color.greenF() * scaleFactor, color.blueF() * scaleFactor ) );
 }
 
 void QgsPhongMaterial::setShininess( float shininess )

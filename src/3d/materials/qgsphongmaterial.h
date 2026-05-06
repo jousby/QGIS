@@ -51,11 +51,11 @@ class _3D_EXPORT QgsPhongMaterial : public QgsMaterial
 
   public slots:
     //! Sets ambient color component, must be a SRGB color
-    void setAmbient( const QColor &ambient );
+    void setAmbient( const QColor &ambient, float scaleFactor = 1 );
     //! Sets diffuse color component, must be a SRGB color
-    void setDiffuse( const QColor &diffuse );
+    void setDiffuse( const QColor &diffuse, float scaleFactor = 1 );
     //! Sets specular color component, must be a SRGB color
-    void setSpecular( const QColor &specular );
+    void setSpecular( const QColor &specular, float scaleFactor = 1 );
     void setShininess( float shininess );
     void setOpacity( float opacity );
 
